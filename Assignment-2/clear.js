@@ -5,11 +5,11 @@ function init(){
 	if(!gl) { return; }
 	
 	gl.clearColor(0.6, 0.3, 0.8, 1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT);
+
 }
 
 function render(){
-
+	gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
 window.onload = init;

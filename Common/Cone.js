@@ -63,6 +63,11 @@ function Cone( gl, numSides, vertexShaderId, fragmentShaderId ) {
     // reflection of the bottom disk.
     //
     indices = indices.concat( indices.slice(1,n+2).reverse() );
+	
+	//Output the indices
+	for ( var i = 0; i < indices.length; i++){
+		console.log(indices[i]);
+	}
 
     this.positions.buffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, this.positions.buffer );
@@ -86,11 +91,13 @@ function Cone( gl, numSides, vertexShaderId, fragmentShaderId ) {
 
         // Draw the cone's base
         //
-        gl.drawElements( gl.POINTS, this.indices.count, gl.UNSIGNED_SHORT, 0 );
+        //gl.drawElements( gl.TRIANGLE_FAN, this.indices.count, gl.UNSIGNED_SHORT, 0 );
+		gl.drawElements( gl.POINTS, this.indices.count, gl.UNSIGNED_SHORT, 0 );
 
         // Draw the cone's top
         //
         var offset = this.indices.count * 2 /* sizeof(UNSIGNED_INT) */;
-        gl.drawElements( gl.POINTS, this.indices.count, gl.UNSIGNED_SHORT, offset );
+        //gl.drawElements( gl.TRIANGLE_FAN, this.indices.count, gl.UNSIGNED_SHORT, offset );
+		gl.drawElements( gl.POINTS, this.indices.count, gl.UNSIGNED_SHORT, offset );
     }
 };
