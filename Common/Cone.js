@@ -65,6 +65,7 @@ function Cone( gl, numSides, vertexShaderId, fragmentShaderId ) {
     indices = indices.concat( indices.slice(1,n+2).reverse() );
 	
 	//Output the indices
+	//Helper function
 	for ( var i = 0; i < indices.length; i++){
 		console.log(indices[i]);
 	}
