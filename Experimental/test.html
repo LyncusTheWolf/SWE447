@@ -9,11 +9,11 @@
 		<script src="Matrix/gl-matrix.js"></script>
 		<script src="renderStream.js"></script>
 		
-		<script id="Cone-vertex-shader" type="x-shader/x-vertex">
+		<!--<script id="Cone-vertex-shader" type="x-shader/x-vertex">
 			attribute vec4 vPosition;
 
 			void main(){
-				//gl_PointSize = 5.0;
+				gl_PointSize = 5.0;
 				gl_Position = vPosition;
 			}
 		</script>
@@ -22,34 +22,34 @@
 			void main(){
 				gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 			}
-		</script>
+		</script>-->
 		
 		<script id="Cube-vertex-shader" type="x-shader/x-vertex">
 			precision mediump float;
 		
 			attribute vec3 vPosition;
-			//attribute vec3 vColor;
-			//varying vec3 fColor;
+			attribute vec3 vColor;
+			varying vec3 fColor;
 			
-			//uniform mat4 mWorld;
-			//uniform mat4 mView;
-			//uniform mat4 mProj;
+			uniform mat4 mWorld;
+			uniform mat4 mView;
+			uniform mat4 mProj;
 
 			void main(){
 				//gl_PointSize = 5.0;
-				//fColor = vColor;
-				//gl_Position = mProj * mView * mWorld * vPosition;
-				gl_Position = vec4(vPosition, 0.0);
+				fColor = vColor;
+				gl_Position = mProj * mView * mWorld * vec4(vPosition, 1.0);
+				//gl_Position = vec4(vPosition, 1.0);
 			}
 		</script>
 		<script id ="Cube-fragment-shader" type="x-shader/x-fragment">
 			precision mediump float;
 			
-			//varying vec3 fColor;
+			varying vec3 fColor;
 			
 			void main(){
-				//gl_FragColor = vec4(fColor, 1.0);
-				gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+				gl_FragColor = vec4(fColor, 1.0);
+				//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 			}
 		</script>
 

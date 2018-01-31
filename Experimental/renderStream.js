@@ -1,5 +1,5 @@
 var cone = null;
-var cube = null;
+//var cube = null;
 var gl = null;
 
 function init() {
@@ -11,16 +11,17 @@ function init() {
 		return;
 	}
 	
+	gl.enable(gl.DEPTH_TEST);
+	
 	gl.clearColor(0.0, 1.0, 1.0, 1.0);
 	
 	//cone = new Cone(gl);
 	cube = new Cube(gl);
-		
-	console.log("Test");
 	
-	gl.clear(gl.COLOR_BUFFER_BIT);
-	cube.render();
-	
+
+	//cone.render();
+
+	window.requestAnimationFrame(render);
 	/*var loop = function render(){
 		gl.clear(gl.COLOR_BUFFER_BIT);
 		//cone.render();
@@ -30,5 +31,17 @@ function init() {
 	requestAnimationFrame(loop);*/
 }
 
+function render(){
+	//console.log(performance.now());
+	var timeDelta = performance.now();
+	
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	cube.render(timeDelta);
+	window.requestAnimationFrame(render);
+}
+
+function resize(){
+		
+}
 
 window.onload = init;
