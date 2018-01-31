@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<script src="../Common/webgl-utils.js"></script>
+		<script src="../Common/initShaders.js"></script>
+		<script src="../Common/Cone.js"></script>
+		<script src="Cube.js"></script>
+		<script src="Matrix/gl-matrix.js"></script>
+		<script src="renderStream.js"></script>
+		
+		<script id="Cone-vertex-shader" type="x-shader/x-vertex">
+			attribute vec4 vPosition;
+
+			void main(){
+				//gl_PointSize = 5.0;
+				gl_Position = vPosition;
+			}
+		</script>
+		<script id ="Cone-fragment-shader" type="x-shader/x-fragment">
+			precision highp float;
+			void main(){
+				gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+			}
+		</script>
+		
+		<script id="Cube-vertex-shader" type="x-shader/x-vertex">
+			precision mediump float;
+		
+			attribute vec3 vPosition;
+			//attribute vec3 vColor;
+			//varying vec3 fColor;
+			
+			//uniform mat4 mWorld;
+			//uniform mat4 mView;
+			//uniform mat4 mProj;
+
+			void main(){
+				//gl_PointSize = 5.0;
+				//fColor = vColor;
+				//gl_Position = mProj * mView * mWorld * vPosition;
+				gl_Position = vec4(vPosition, 0.0);
+			}
+		</script>
+		<script id ="Cube-fragment-shader" type="x-shader/x-fragment">
+			precision mediump float;
+			
+			//varying vec3 fColor;
+			
+			void main(){
+				//gl_FragColor = vec4(fColor, 1.0);
+				gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+			}
+		</script>
+
+	<head>
+	
+	<body>
+		<canvas id="webgl-canvas" width="512" height="512" style="background-color: #0000FF"></canvas>
+	</body>
+</html>
