@@ -86,7 +86,7 @@ function Cone( gl, numSides, vertexShaderId, fragmentShaderId ) {
 
         gl.bindBuffer( gl.ARRAY_BUFFER, this.positions.buffer );
         gl.vertexAttribPointer( this.positions.attributeLoc, this.positions.numComponents,
-            gl.FLOAT, gl.FALSE, 0, 0 );
+            gl.FLOAT, gl.FALSE, 3 * Float32Array.BYTES_PER_ELEMENT, 0 );
  
         gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.indices.buffer );
 
