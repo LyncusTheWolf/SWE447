@@ -64,34 +64,34 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		    1.0, 0.0, 0.0,
 			
 			//Bottom
-			1.0, 0.0, 0.0, 
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
+			0.25, 0.75, 1.0, 
+		    0.25, 0.75, 1.0, 
+			0.25, 0.75, 1.0, 
+			0.25, 0.75, 1.0, 
 			
 			//Front
-			1.0, 0.0, 0.0, 
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
+			0.5, 0.0, 0.5, 
+		    0.5, 0.0, 0.5,
+			0.5, 0.0, 0.5,
+			0.5, 0.0, 0.5,
 			
 			//Back
-			1.0, 0.0, 0.0, 
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
+			1.0, 1.0, 1.0, 
+		    1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0, 
+			1.0, 1.0, 1.0, 
 			
 			//Right
-			1.0, 0.0, 0.0, 
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
+			0.25, 0.25, 0.5, 
+		    0.25, 0.25, 0.5,
+		    0.25, 0.25, 0.5,
+		    0.25, 0.25, 0.5,
 			
 			//Left
-			1.0, 0.0, 0.0, 
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
-		    1.0, 0.0, 0.0,
+			0.0, 0.75, 0.25, 
+		    0.0, 0.75, 0.25,
+			0.0, 0.75, 0.25, 
+			0.0, 0.75, 0.25
 		]),
 		numComponents : 3 
 	};
@@ -123,6 +123,14 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		])
     };
 	
+	this.MV = mat4();
+	this.P = mat4();	
+	
+	this.uniforms = {
+		MV : undefined,
+		P : undefined
+	};
+	
 	// positions	
 	this.positions.buffer = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, this.positions.buffer );
@@ -141,11 +149,22 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
     this.indices.buffer = gl.createBuffer();
     gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.indices.buffer );
     gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, this.indices.values, gl.STATIC_DRAW );
+	
+	//Uniforms
+	this.uniforms.MV = gl.getUniformLocation(this.program, "MV");
+	this.uniforms.P = gl.getUniformLocation(this.program, "P");
     
 
 	this.render = function () {
     	gl.useProgram( this.program );
     	//gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
+		//var ms = new MatrixStack();
+		
+		//ms.load(V)
+		
+		gl.uniformMatrix4fv(this.uniforms.MV, gl.FALSE, flatten(this.MV));
+		gl.uniformMatrix4fv(this.uniforms.P, gl.FALSE, flatten(this.P));
 
     	gl.bindBuffer( gl.ARRAY_BUFFER, this.positions.buffer );
     	gl.vertexAttribPointer( 
