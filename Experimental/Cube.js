@@ -14,7 +14,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 
 	gl.useProgram(this.program);
 	this.count = 4;
-
+	
 	this.positions = {
 		values : new Float32Array([
 		    //Top
@@ -135,7 +135,12 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		]),
 		numComponents : 3 
 	};	
-    this.indices = {
+    this.uvs = {
+		values : new Float32Array([
+		
+		])
+	};
+	this.indices = {
 		values : new Uint16Array([
 			//Top
 			1, 3, 2,
@@ -162,6 +167,23 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			20, 23, 22
 		])
     };
+	
+	var texture = null;
+	
+	texture = gl.createTexture();
+	
+	var image = new Image();
+	image.onload = function(){
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.pixelStorei(gl.UNPACK_Y_WEBGL, true);		
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		//console.log("I have been loaded");
+	}
+	
+	image.src = "img/Box_Diffuse.png";
 	
 	this.worldMatrix = mat4(1);
 	//this.viewMatrix = mat4();
