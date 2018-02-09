@@ -18,40 +18,40 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	this.positions = {
 		values : new Float32Array([
 		    //Top
-			0.5, 0.5, 0.5,		//Vertex 0
-			0.5, 0.5, -0.5,		//Vertex 1
-			-0.5, 0.5, 0.5,		//Vertex 2
-			-0.5, 0.5, -0.5,	//Vertex 3
+			1.0, 1.0, 1.0,		//Vertex 0
+			1.0, 1.0, -1.0,		//Vertex 1
+			-1.0, 1.0, 1.0,		//Vertex 2
+			-1.0, 1.0, -1.0,	//Vertex 3
 			
 			//Bottom
-			0.5, -0.5, 0.5,		//Vertex 4
-			0.5, -0.5, -0.5,	//Vertex 5
-			-0.5, -0.5, 0.5,	//Vertex 6
-			-0.5, -0.5, -0.5,	//Vertex 7
+			1.0, -1.0, 1.0,		//Vertex 4
+			1.0, -1.0, -1.0,	//Vertex 5
+			-1.0, -1.0, 1.0,	//Vertex 6
+			-1.0, -1.0, -1.0,	//Vertex 7
 			
 			//Front
-			0.5, 0.5, -0.5,		//Vertex 8
-			0.5, -0.5, -0.5,	//Vertex 9
-			-0.5, 0.5, -0.5,	//Vertex 10
-			-0.5, -0.5, -0.5,	//Vertex 11
+			1.0, 1.0, -1.0,		//Vertex 8
+			1.0, -1.0, -1.0,	//Vertex 9
+			-1.0, 1.0, -1.0,	//Vertex 10
+			-1.0, -1.0, -1.0,	//Vertex 11
 			
 			//Back
-			0.5, 0.5, 0.5,		//Vertex 12
-			0.5, -0.5, 0.5,		//Vertex 13
-			-0.5, 0.5, 0.5,		//Vertex 14
-			-0.5, -0.5, 0.5,	//Vertex 15
+			1.0, 1.0, 1.0,		//Vertex 12
+			1.0, -1.0, 1.0,		//Vertex 13
+			-1.0, 1.0, 1.0,		//Vertex 14
+			-1.0, -1.0, 1.0,	//Vertex 15
 			
 			//Right
-			0.5, 0.5, 0.5,		//Vertex 16
-			0.5, 0.5, -0.5,		//Vertex 17
-			0.5, -0.5, 0.5,		//Vertex 18
-			0.5, -0.5, -0.5,	//Vertex 19
+			1.0, 1.0, 1.0,		//Vertex 16
+			1.0, 1.0, -1.0,		//Vertex 17
+			1.0, -1.0, 1.0,		//Vertex 18
+			1.0, -1.0, -1.0,	//Vertex 19
 			
 			//Left
-			-0.5, 0.5, 0.5,		//Vertex 20
-			-0.5, 0.5, -0.5,	//Vertex 21
-			-0.5, -0.5, 0.5,	//Vertex 22
-			-0.5, -0.5, -0.5	//Vertex 23
+			-1.0, 1.0, 1.0,		//Vertex 20
+			-1.0, 1.0, -1.0,	//Vertex 21
+			-1.0, -1.0, 1.0,	//Vertex 22
+			-1.0, -1.0, -1.0	//Vertex 23
 		]),
 		numComponents : 3 // 3 components for each position
 	};
@@ -98,28 +98,28 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
     this.indices = {
 		values : new Uint16Array([
 			//Top
-			1, 2, 3,
-			1, 0, 2,
+			1, 3, 2,
+			1, 2, 0,
 			
 			//Bottom
-			4, 5, 7,
-			4, 7, 6,
+			4, 7, 5,
+			4, 6, 7,
 			
 			//Front
-			9, 8, 10,
-			9, 10, 11,
+			9, 10, 8,
+			9, 11, 10,
 			
 			//Back
-			12, 13, 15,
-			12, 15, 14,
+			12, 15, 13,
+			12, 14, 15,
 			
 			//Right
-			17, 18, 16,
-			17, 19, 18,
+			17, 16, 18,
+			17, 18, 19,
 			
 			//Left
-			20, 23, 21,
-			20, 22, 23
+			20, 21, 23,
+			20, 23, 22
 		])
     };
 	

@@ -3,8 +3,8 @@ var cube = null;
 var gl = null;
 var P;
 var time;
-var deltaTime;
-var rotMat;
+var deltaTime;				//Cache time stamps between frames
+var rotationSpeed = 50.0;	//In degrees per second around an axis
 
 function init() {
 	time = 0.0;
@@ -39,18 +39,25 @@ function init() {
 }*/
 
 function render(){
+	//Clear the buffers
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	
+	//Get the time in seconds
 	var timeSlice = performance.now() * 0.001
 	
 	//Obtain the delta in time before the previous frame before overwritting time
 	deltaTime = timeSlice - time;
 	time = timeSlice; 
 	
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	//Reassign the perspective here, assume the camera has moved
 	cube.P = P;
-	//cube.MV = lookAt([0, 1, -5], [0, 0, 0], [0, 1, 0]); //mult();
-	rotMat = rotate(deltaTime * 50.0, [0.6324, 0.5477, 0.5477]);
 	
-	cube.MV = mult(cube.MV, rotMat);
+	//Use a normalized skewed angle
+	var rotMat = rotate(deltaTime * rotationSpeed, [0.6324, 0.5477, 0.5477]);
+	//Add another rotation matrix that slowly rotates around the Y-axis
+	var rotMat2 = rotate(deltaTime * rotationSpeed * 0.2, [0.0, 1.0, 0.0]);
+	
+	cube.MV = mult(mult(cube.MV, rotMat), rotMat2);
 	cube.render();
 	window.requestAnimationFrame(render);
 	//console.log(1 / deltaTime);
