@@ -1,8 +1,15 @@
-var cone = null;
-//var cube = null;
 var gl = null;
+var cube = null;
+var time;
+var deltaTime;				//Cache time stamps between frames
+var viewMatrix;
+var camProjMatrix;
+var mainLight;
 
 function init() {
+	time = 0.0;
+	deltaTime= 0.0;
+	
 	var canvas = document.getElementById("webgl-canvas");
 	gl = WebGLUtils.setupWebGL(canvas);
 	
@@ -15,28 +22,36 @@ function init() {
 	
 	gl.clearColor(0.0, 1.0, 1.0, 1.0);
 	
-	//cone = new Cone(gl);
+	mainLight = new LightSource();
+	mainLight.direction = [-1.0, 1.0, -1.0]
+
 	cube = new Cube(gl);
 	
-
-	//cone.render();
+	//Create the view matrix
+	viewMatrix = lookAt([0, 1, -5], [0, 0, 0], [0, 1, 0]);
+		
+	//Load in the camera's view projection
+	camProjMatrix = perspective(60, 1, 0.3, 1000);
 
 	window.requestAnimationFrame(render);
-	/*var loop = function render(){
-		gl.clear(gl.COLOR_BUFFER_BIT);
-		//cone.render();
-		cube.render();
-		//requestAnimationFrame(loop);
-	}
-	requestAnimationFrame(loop);*/
 }
 
-function render(){
-	//console.log(performance.now());
-	var timeDelta = performance.now();
-	
+function render(){		
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	cube.render(timeDelta);
+	
+	//Get the time in seconds
+	var timeSlice = performance.now() * 0.001
+	
+	//Obtain the delta in time before from previous frame before overwritting time for the current frame
+	deltaTime = timeSlice - time;
+	time = timeSlice;
+	
+	//mainLight.color = [Math.sin(time * 1.5 * Math.PI + Math.PI), Math.sin(time * 2.0 * Math.PI), Math.sin(time * 3.0 * Math.PI)];
+	
+	var rotMat = rotate(deltaTime * 15.0, [0.6324, 0.5477, 0.5477]);
+	var rotMat2 = rotate(deltaTime * 25.0, [0.0, 1.0, 0.0]);
+	cube.worldMatrix = mult(mult(cube.worldMatrix, rotMat), rotMat2);
+	cube.render(viewMatrix, camProjMatrix, mainLight);
 	window.requestAnimationFrame(render);
 }
 
