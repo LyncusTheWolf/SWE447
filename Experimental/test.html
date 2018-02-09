@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html5>
 
 <html>
 	<head>
@@ -15,6 +15,7 @@
 			attribute vec3 vPosition;
 			attribute vec3 vColor;
 			attribute vec3 vNormal;
+			attribute vec2 vUV;
 			
 			uniform mat4 mWorld;
 			uniform mat4 mView;
@@ -22,10 +23,12 @@
 			
 			varying vec3 fColor;
 			varying vec3 fNormal;
+			varying vec2 fTexCoord;
 
 			void main(){
 				//gl_PointSize = 5.0;
 				fColor = vColor;
+				fTexCoord = vUV;
 				fNormal = (mWorld * vec4(vNormal, 0.0)).xyz;
 				gl_Position = mProj * mView * mWorld * vec4(vPosition, 1.0);
 				//gl_Position = vec4(vPosition, 1.0);
@@ -36,18 +39,21 @@
 			
 			varying vec3 fColor;
 			varying vec3 fNormal;
+			varying vec2 fTexCoord;
 			
 			uniform vec3 ambientLighting;
 			uniform vec3 lightDir;
 			uniform vec3 lightCol;
 			
-			void main(){				
+			uniform sampler2D diffuseSampler;
+			
+			void main(){
+				vec3 texel = texture2D(diffuseSampler, fTexCoord.st).rgb;
 				vec3 normSunDir = normalize(lightDir);
 				
 				vec3 lightModel = ambientLighting + 
 					lightCol * max(dot(fNormal, normSunDir), 0.0);
-				
-				gl_FragColor = vec4(fColor * lightModel, 1.0);
+				gl_FragColor = vec4(texel * lightModel, 1.0);
 				//gl_FragColor = vec4(1.0, 0.0, gl_FrontFacing ? 1.0 : 0.0, 1.0);
 			}
 		</script>

@@ -137,8 +137,43 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	};	
     this.uvs = {
 		values : new Float32Array([
-		
-		])
+			//Top
+			0.0, 0.0,
+			0.0, 1.0,
+			1.0, 0.0,			
+			1.0, 1.0,
+			
+			//Bottom
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			1.0, 1.0,
+			
+			//Front
+			0.0, 0.0,
+			0.0, 1.0,
+			1.0, 0.0,			
+			1.0, 1.0,
+			
+			//Back
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			1.0, 1.0,
+			
+			//Right
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			1.0, 1.0,
+			
+			//Left
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			1.0, 1.0
+		]),
+		numComponents : 2
 	};
 	this.indices = {
 		values : new Uint16Array([
@@ -169,25 +204,33 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
     };
 	
 	var texture = null;
+	var textureHasLoaded = false;
 	
-	texture = gl.createTexture();
+	diffuseTexture = gl.createTexture();
 	
-	var image = new Image();
-	image.onload = function(){
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		gl.pixelStorei(gl.UNPACK_Y_WEBGL, true);		
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-		gl.bindTexture(gl.TEXTURE_2D, null);
+	diffuseTexture.image = new Image();
+
+	diffuseTexture.image.onload = function(){
+		handleTextureLoad(diffuseTexture);
 		//console.log("I have been loaded");
 	}
 	
-	image.src = "img/Box_Diffuse.png";
+	function handleTextureLoad(texture){
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);		
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		textureHasLoaded = true;
+	}
+	
+	diffuseTexture.image.crossOrigin = "Use-Credentials";
+	//TODO: Figure out how to handle CORS domain errors later
+	//Utilize: --allow-file-access-from-files
+	diffuseTexture.image.src = "img/Box_Diffuse.png";
 	
 	this.worldMatrix = mat4(1);
-	//this.viewMatrix = mat4();
-	//this.projMatrix = mat4();	
 	
 	this.uniforms = {
 		ModelMatrix : undefined,
@@ -195,7 +238,8 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		ProjMatrix : undefined,
 		AmbientLight : undefined,
 		LightDirection : undefined,
-		LightMainColor : undefined
+		LightMainColor : undefined,
+		Diffuse : undefined
 	};
 	
 	// positions	
@@ -217,6 +261,13 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
     gl.bufferData( gl.ARRAY_BUFFER, this.colors.values, gl.STATIC_DRAW );
     this.colors.attributeLoc = gl.getAttribLocation( this.program, "vColor" );
     gl.enableVertexAttribArray( this.colors.attributeLoc );
+	
+	// uvs
+	this.uvs.buffer = gl.createBuffer();
+	gl.bindBuffer( gl.ARRAY_BUFFER, this.uvs.buffer );
+    gl.bufferData( gl.ARRAY_BUFFER, this.uvs.values, gl.STATIC_DRAW );
+	this.uvs.attributeLoc = gl.getAttribLocation( this.program, "vUV" );
+	gl.enableVertexAttribArray( this.uvs.attributeLoc );
     
 	// indices
     this.indices.buffer = gl.createBuffer();
@@ -231,7 +282,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	this.uniforms.LightDirection = gl.getUniformLocation(this.program, "lightDir");
 	this.uniforms.LightMainColor = gl.getUniformLocation(this.program, "lightCol");
 	
-	gl.uniform3f(this.uniforms.ambientLighting, 0.5, 0.5, 0.5);
+	//gl.uniform3f(this.uniforms.AmbientLight, 0.9, 1.0, 1.0);
 
 	this.render = function (viewMatrix, projMatrix, mainLight) {
     	gl.useProgram( this.program );
@@ -241,9 +292,11 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		gl.uniformMatrix4fv(this.uniforms.ViewMatrix, gl.FALSE, flatten(viewMatrix));
 		gl.uniformMatrix4fv(this.uniforms.ProjMatrix, gl.FALSE, flatten(projMatrix));
 		
+		gl.uniform3f(this.uniforms.AmbientLight, 0.3, 0.3, 0.3);
 		gl.uniform3f(this.uniforms.LightDirection, mainLight.direction[0], mainLight.direction[1], mainLight.direction[2]);
 		gl.uniform3f(this.uniforms.LightMainColor, mainLight.color[0], mainLight.color[1], mainLight.color[2]);
 
+		//Rebind position values
     	gl.bindBuffer( gl.ARRAY_BUFFER, this.positions.buffer );
     	gl.vertexAttribPointer( 
 			this.positions.attributeLoc, 
@@ -254,6 +307,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			0 
 		);
 
+		//Rebind normal values
 		gl.bindBuffer( gl.ARRAY_BUFFER, this.normals.buffer );
 		gl.vertexAttribPointer(
 			this.normals.attributeLoc,
@@ -263,7 +317,8 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			3 * Float32Array.BYTES_PER_ELEMENT,
 			0
 		);
-           
+        
+		//Rebind color values		
     	gl.bindBuffer( gl.ARRAY_BUFFER, this.colors.buffer );
     	gl.vertexAttribPointer( 
 			this.colors.attributeLoc, 
@@ -273,6 +328,23 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			3 * Float32Array.BYTES_PER_ELEMENT, 
 			0 
 		);
+		
+		//Rebind uv values		
+    	gl.bindBuffer( gl.ARRAY_BUFFER, this.uvs.buffer );
+    	gl.vertexAttribPointer( 
+			this.uvs.attributeLoc, 
+			this.uvs.numComponents,
+        	gl.FLOAT, 
+			gl.FALSE, 
+			2 * Float32Array.BYTES_PER_ELEMENT, 
+			0 
+		);
+		
+		if(textureHasLoaded){
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, diffuseTexture);
+			gl.uniform1i(this.uniforms.Diffuse, 0);
+		}
 
 		gl.drawElements(gl.TRIANGLES, this.indices.values.length, gl.UNSIGNED_SHORT, 0);
 	};
