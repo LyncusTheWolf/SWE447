@@ -43,7 +43,7 @@ function render(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
 	//Get the time in seconds
-	var timeSlice = performance.now() * 0.001
+	var timeSlice = performance.now() * 0.001;
 	
 	//Obtain the delta in time before the previous frame before overwritting time
 	deltaTime = timeSlice - time;

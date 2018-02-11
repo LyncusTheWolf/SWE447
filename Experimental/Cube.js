@@ -209,7 +209,9 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	diffuseTexture = gl.createTexture();
 	
 	diffuseTexture.image = new Image();
-
+	
+	diffuseTexture.image.crossOrigin = "use-credentials";
+	
 	diffuseTexture.image.onload = function(){
 		handleTextureLoad(diffuseTexture);
 		//console.log("I have been loaded");
@@ -224,10 +226,11 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		textureHasLoaded = true;
 	}
-	
-	diffuseTexture.image.crossOrigin = "Use-Credentials";
+
 	//TODO: Figure out how to handle CORS domain errors later
 	//Utilize: --allow-file-access-from-files
+	//		   --disable-web-security
+	//         --user-data-dir
 	diffuseTexture.image.src = "img/Box_Diffuse.png";
 	
 	this.worldMatrix = mat4(1);

@@ -20,7 +20,7 @@ function init() {
 	
 	gl.enable(gl.DEPTH_TEST);
 	
-	gl.clearColor(0.0, 1.0, 1.0, 1.0);
+	gl.clearColor(0.5, 0.5, 1.0, 1.0);
 	
 	mainLight = new LightSource();
 	mainLight.direction = [-1.0, 1.0, -1.0]

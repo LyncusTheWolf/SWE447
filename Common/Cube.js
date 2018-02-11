@@ -187,7 +187,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			0 
 		);
 	
-        //gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.indices.buffer );
+        gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.indices.buffer );
 		//var start = 0;
 		//var count = this.count;
 		//gl.drawArrays(gl.TRIANGLE_STRIP, start, count); // TRIANGLE_STRIP
