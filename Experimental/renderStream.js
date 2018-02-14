@@ -5,10 +5,13 @@ var deltaTime;				//Cache time stamps between frames
 var viewMatrix;
 var camProjMatrix;
 var mainLight;
+var rotSpeed = 1;
 
 function init() {
 	time = 0.0;
 	deltaTime= 0.0;
+	
+	console.log("Loading GL");
 	
 	var canvas = document.getElementById("webgl-canvas");
 	gl = WebGLUtils.setupWebGL(canvas);
@@ -48,8 +51,8 @@ function render(){
 	
 	//mainLight.color = [Math.sin(time * 1.5 * Math.PI + Math.PI), Math.sin(time * 2.0 * Math.PI), Math.sin(time * 3.0 * Math.PI)];
 	
-	var rotMat = rotate(deltaTime * 15.0, [0.6324, 0.5477, 0.5477]);
-	var rotMat2 = rotate(deltaTime * 25.0, [0.0, 1.0, 0.0]);
+	var rotMat = rotate(deltaTime * 15.0 * rotSpeed, [0.6324, 0.5477, 0.5477]);
+	var rotMat2 = rotate(deltaTime * 25.0 * rotSpeed, [0.0, 1.0, 0.0]);
 	cube.worldMatrix = mult(mult(cube.worldMatrix, rotMat), rotMat2);
 	cube.render(viewMatrix, camProjMatrix, mainLight);
 	window.requestAnimationFrame(render);
@@ -59,4 +62,11 @@ function resize(){
 		
 }
 
+function input(e){
+	var code = e.keyCode;
+	
+	console.log(code);
+}
+
 window.onload = init;
+window.addEventListener('keydown', this.input, false);
