@@ -36,15 +36,17 @@ var V;  // matrix storing the viewing transformation
 // Projection transformation parameters
 var P;  // matrix storing the projection transformation
 var near = 10;      // near clipping plane's distance
-var far = 2500;      // far clipping plane's distance
+var far = 160;      // far clipping plane's distance
 
 // Animation variables
 var time = 0.0;      // time, our global time constant, which is 
                      // incremented every frame
 var timeDelta = 0.5; // the amount that time is updated each fraime
 
-var distanceScalar = 12.0;
-var orbitScalar = 3.0;
+//var distanceScalar = 12.0;
+var orbitScalar = 50.0;
+
+var orbitShift = 6000;	//An additional shift applied to each planets rotation at the start
 
 //---------------------------------------------------------------------------
 //
@@ -98,7 +100,8 @@ function init() {
 
 function render() {		
 	//time += timeDelta;
-	time = performance.now() * 0.001;
+	//Obatin time with respect to the current fps;
+	time = performance.now() * 0.001 + orbitShift;
 
 	var ms = new MatrixStack();
 
@@ -112,7 +115,7 @@ function render() {
 	ms.load(V);
 	
 	//Scale up the initial solar system
-	ms.scale(4);
+	//ms.scale(1);
 
 	// Create a few temporary variables to make it simpler to work with
 	// the various properties we'll use to render the planets.  The Planets
@@ -163,8 +166,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -181,8 +184,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -199,8 +202,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.push();
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
@@ -217,8 +220,8 @@ function render() {
 	
 	planet.PointMode = false;
 	
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar * 80, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -235,8 +238,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -255,8 +258,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -273,8 +276,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -291,8 +294,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -309,8 +312,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
@@ -327,8 +330,8 @@ function render() {
 	planet.PointMode = false;
 	
 	ms.push();
-	ms.rotate(data.year * time * orbitScalar, [0.0, 1.0, 0.0]);
-	ms.translate(data.distance * distanceScalar, 0, 0);
+	ms.rotate(time * orbitScalar / data.year, [0.0, 1.0, 0.0]);
+	ms.translate(data.distance, 0, 0);
 	ms.scale(data.radius);
 	gl.useProgram(planet.program);
 	gl.uniformMatrix4fv(planet.uniforms.MV, false, flatten(ms.current()));
