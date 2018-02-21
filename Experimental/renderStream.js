@@ -11,7 +11,7 @@ function init() {
 	time = 0.0;
 	deltaTime= 0.0;
 	
-	console.log("Loading GL");
+	//console.log("Loading GL");
 	
 	var canvas = document.getElementById("webgl-canvas");
 	gl = WebGLUtils.setupWebGL(canvas);

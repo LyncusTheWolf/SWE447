@@ -95,7 +95,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		]),
 		numComponents : 3
 	};
-	this.colors = {
+	/*this.colors = {
 		values : new Float32Array([
 			//Top
 		    1.0, 0.0, 0.0, 
@@ -134,7 +134,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			0.0, 0.75, 0.25
 		]),
 		numComponents : 3 
-	};	
+	};*/	
     this.uvs = {
 		values : new Float32Array([
 			//Top
@@ -210,7 +210,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	
 	diffuseTexture.image = new Image();
 	
-	diffuseTexture.image.crossOrigin = "use-credentials";
+	//diffuseTexture.image.crossOrigin = "use-credentials";
 	
 	diffuseTexture.image.onload = function(){
 		handleTextureLoad(diffuseTexture);
@@ -259,17 +259,17 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	gl.enableVertexAttribArray( this.normals.attributeLoc );
 
 	// colors
-    this.colors.buffer = gl.createBuffer();
+    /*this.colors.buffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, this.colors.buffer );
     gl.bufferData( gl.ARRAY_BUFFER, this.colors.values, gl.STATIC_DRAW );
     this.colors.attributeLoc = gl.getAttribLocation( this.program, "vColor" );
-    gl.enableVertexAttribArray( this.colors.attributeLoc );
+    gl.enableVertexAttribArray( this.colors.attributeLoc );*/
 	
 	// uvs
 	this.uvs.buffer = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, this.uvs.buffer );
     gl.bufferData( gl.ARRAY_BUFFER, this.uvs.values, gl.STATIC_DRAW );
-	this.uvs.attributeLoc = gl.getAttribLocation( this.program, "vUV" );
+	this.uvs.attributeLoc = gl.getAttribLocation( this.program, "vTexCoord" );
 	gl.enableVertexAttribArray( this.uvs.attributeLoc );
     
 	// indices
@@ -322,7 +322,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 		);
         
 		//Rebind color values		
-    	gl.bindBuffer( gl.ARRAY_BUFFER, this.colors.buffer );
+    	/*gl.bindBuffer( gl.ARRAY_BUFFER, this.colors.buffer );
     	gl.vertexAttribPointer( 
 			this.colors.attributeLoc, 
 			this.colors.numComponents,
@@ -330,7 +330,7 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 			gl.FALSE, 
 			3 * Float32Array.BYTES_PER_ELEMENT, 
 			0 
-		);
+		);*/
 		
 		//Rebind uv values		
     	gl.bindBuffer( gl.ARRAY_BUFFER, this.uvs.buffer );
