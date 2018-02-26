@@ -23,21 +23,30 @@ function init() {
 	
 	gl.clearColor(0.5, 0.5, 1.0, 1.0);
 	
+	//Add some lighting to make the cube look nicer
 	mainLight = new LightSource();
 	mainLight.direction = [-1.0, 1.0, -1.0]
 
-	cube = new Cube(gl);
+	cube = new TCube(gl);
 	
 	//Create the view matrix
 	viewMatrix = lookAt([0, 1, -5], [0, 0, 0], [0, 1, 0]);
 		
 	//Load in the camera's view projection
 	camProjMatrix = perspective(60, 1, 0.3, 1000);
-
+	
 	window.requestAnimationFrame(render);
 }
 
-function render(){		
+/*function resize(){
+	var w = canvas.clientWidth,
+		h = canvas.clientHeight;
+		
+	gl.viewport(0, 0, w, h);
+	P = perspective(60, w/h, 0.3, 1000);
+}*/
+
+function render(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
 	//Get the time in seconds
@@ -54,17 +63,8 @@ function render(){
 	cube.worldMatrix = mult(mult(cube.worldMatrix, rotMat), rotMat2);
 	cube.render(viewMatrix, camProjMatrix, mainLight);
 	window.requestAnimationFrame(render);
-}
-
-function resize(){
-		
-}
-
-function input(e){
-	var code = e.keyCode;
-	
-	console.log(code);
+	//console.log(1 / deltaTime);
 }
 
 window.onload = init;
-window.addEventListener('keydown', this.input, false);
+//window.onresize = resize;
