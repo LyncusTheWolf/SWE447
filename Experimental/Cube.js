@@ -212,6 +212,8 @@ function Cube(gl, vertexShaderId, fragmentShaderId) {
 	
 	//diffuseTexture.image.crossOrigin = "use-credentials";
 	
+	diffuseTexture.image.crossOrigin = "anonymous";
+	
 	diffuseTexture.image.onload = function(){
 		handleTextureLoad(diffuseTexture);
 		//console.log("I have been loaded");
