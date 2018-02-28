@@ -30,7 +30,7 @@ function init() {
 	mesh = new MeshObj();
 	
 	//Create the view matrix
-	viewMatrix = lookAt([0, 1, -5], [0, 0, 0], [0, 1, 0]);
+	viewMatrix = lookAt([0, 0, -5], [0, 0, 0], [0, 1, 0]);
 		
 	//Load in the camera's view projection
 	camProjMatrix = perspective(60, 1, 0.3, 1000);
@@ -55,7 +55,7 @@ function render(){
 	ms.load(translate(0.0, 0.0, 0.0));
 	
 	ms.push();
-	ms.rotate(time * 45, [0.0, 1.0, 0.0]);
+	ms.rotate(time * 45, [0.4, 1.0, 0.2]);
 	mesh.render(flatten(ms.current()), viewMatrix, camProjMatrix);
 	ms.pop();
 	window.requestAnimationFrame(render);

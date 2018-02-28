@@ -23,6 +23,16 @@ function MeshObj(){
 		numComponents : 3
 	};
 	
+	this.normals = {
+		values : new Float32Array([
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0
+		]),
+		numComponents : 3
+	};
+	
 	this.indices = {
 		values : new Uint16Array([
 			0, 1, 2,
@@ -42,6 +52,12 @@ function MeshObj(){
     gl.bufferData( gl.ARRAY_BUFFER, this.positions.values, gl.STATIC_DRAW );
 	this.positions.attributeLoc = gl.getAttribLocation( this.program, "vPos" );
 	gl.enableVertexAttribArray( this.positions.attributeLoc );
+	
+	this.normals.buffer = gl.createBuffer();
+	gl.bindBuffer( gl.ARRAY_BUFFER, this.normals.buffer );
+	gl.bufferData( gl.ARRAY_BUFFER, this.normals.values, gl.STATIC_DRAW );
+	this.normals.attributeLoc = gl.getAttribLocation(this.program, "vNormal" );
+	gl.enableVertexAttribArray( this.normals.attributeLoc );
 	
 	// indices
     this.indices.buffer = gl.createBuffer();
@@ -69,6 +85,17 @@ function MeshObj(){
 			gl.FALSE, 
 			3 * Float32Array.BYTES_PER_ELEMENT, 
 			0 
+		);
+		
+		//Rebind normal values
+		gl.bindBuffer( gl.ARRAY_BUFFER, this.normals.buffer );
+		gl.vertexAttribPointer(
+			this.normals.attributeLoc,
+			this.normals.numComponents,
+			gl.FLOAT,
+			gl.FALSE,
+			3 * Float32Array.BYTES_PER_ELEMENT,
+			0
 		);
 		
 		gl.drawElements(gl.TRIANGLES, this.indices.values.length, gl.UNSIGNED_SHORT, 0);
