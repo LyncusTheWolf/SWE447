@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<script src="webgl-utils.js"></script>
+		<script src="initShaders.js"></script>
+		<script src="MV.js"></script>
+		<script src="MatrixStack.js"></script>  
+		<script src="Sphere.js"></script>
+		<script src="SolarSystem.js"></script>
+		<script src="Solar.js"></script>
+
+		<script type="x-shader/x-vertex" id="Sphere-vertex-shader">
+			attribute vec4 vPosition;
+			attribute vec4 vNormal;
+			attribute vec2 vTexCoord;
+
+			uniform mat4  MV;
+			uniform mat4  P;
+			
+			varying vec3 fNormal;
+			varying vec4 fWorldPos;
+			varying vec2 fTexCoord;
+
+			void main()
+			{
+				fNormal = (MV * vec4(vNormal.xyz, 0.0)).xyz;
+				fWorldPos = MV * vPosition;
+				fTexCoord = vTexCoord;
+				//fNormal = vNormal.xyz;
+				gl_Position = P * fWorldPos;
+			}
+			</script>
+
+			<script type="x-shader/x-fragment" id="Sphere-fragment-shader">
+			precision highp float;
+
+			varying vec3 fNormal;
+			varying vec4 fWorldPos;
+			varying vec2 fTexCoord;
+			
+			uniform vec3  lightPos;
+			uniform vec3  ambientLight;
+			uniform vec4  color;
+			
+			uniform sampler2D diffuseSampler;
+
+			void main()
+			{
+				vec3 texel = color.xyz * texture2D(diffuseSampler, fTexCoord.st).rgb;
+				vec3 lightDir = normalize(lightPos - fWorldPos.xyz);
+				vec3 lightModel = ambientLight + vec3(1.0, 1.0, 1.0) * max(dot(fNormal, lightDir), 0.0);
+				gl_FragColor = vec4(texel * lightModel, 1.0);
+			}
+		</script>
+	</head>
+
+	<body>
+		<canvas id="webgl-canvas" width="800" height="800"></canvas>
+	</body>
+</html>
