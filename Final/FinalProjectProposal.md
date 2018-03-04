@@ -9,6 +9,6 @@ Week 3: Add Lighting Via the Kajiya-Kay reflection model
 
 Week 4: Add in verlet integration and simplified physics
 
-Week 5: (Stretch goal) Add in simple physics collisions and various other polish 
+Week 5: (Stretch goal) Add in simple physics collisions and various other polish aspects such as predefined shells and splines that can be imported from other programs like blender or maya 
 
 I would like to try using THREE.js to impliment this, however depending on it's limitations I may inside try to do everything from scratch using the normal js libraries.
