@@ -67,8 +67,8 @@ function init() {
 	gl.enable(gl.DEPTH_TEST);
 
 	// Initialize the planets in the Planets list, including specifying
-	// necesasry shaders, shader uniform variables, and other initialization
-	// parameters.  This loops adds additinoal properties to each object
+	// necessary shaders, shader uniform variables, and other initialization
+	// parameters.  This loops adds additional properties to each object
 	// in the Planets object;
 
 	for (var name in Planets ) {
@@ -145,7 +145,7 @@ function render() {
 
 	planet.PointMode = false;
 
-	// Use the matrix stack to configure and render a planet.  How you rener
+	// Use the matrix stack to configure and render a planet.  How you render
 	// each planet will be similar, but not exactly the same.  In particular,
 	// here, we're only rendering the Sun, which is the center of the Solar
 	// system (and hence, has no translation to its location).
