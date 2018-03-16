@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../Common/webgl-utils.js"></script>
+  <script src="../Common/initShaders.js"></script>
+  <script src="../Common/MV.js"></script>
+  <script src="rCube.js"></script>
+  <script src="cube.js"></script>
+  
+<script id="Cube-vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+uniform mat4 MV;
+uniform mat4  P;
+
+//attribute vec2 aTextureCoord;
+varying vec2 vTextureCoord;
+varying vec3 fPosition;
+
+void main()
+{
+	gl_Position = P * MV * vPosition;
+	//vTextureCoord = aTextureCoord;
+	//vTextureCoord = 0.5 * (vPosition.xy + vec2(1));
+	//vTextureCoord = 0.5 * (vPosition.xy );
+	vTextureCoord = vPosition.xy ;
+    //gl_Position = P * MV * (0.8 * vPosition);
+    //gl_Position.w = 1.0;
+	fPosition = vPosition.xyz;
+}
+</script>
+<script id = "Cube-fragment-shader" type="x-shader/x-fragment">
+precision highp float;
+//varying vec4 fColor;
+varying vec2 vTextureCoord;
+varying vec3 fPosition;
+//uniform sampler2D uSampler;
+vec3 color;
+#define M_PI 3.1415926535897932384626433832795
+const int n = 5; //number of patterns to overlay
+
+
+//-------------------------------------------------
+// Calculate a color based on the texture coordinates
+vec4 gradient(vec2 tex_coords) {
+  float s = tex_coords[0];
+  float t = tex_coords[1];
+  vec3 red = vec3(1.0, 0.0, 0.0);
+  float percent;
+
+  percent = sin(s * 2.0 * M_PI) * sin(t * 2.0 * M_PI);
+  return vec4(red * percent, 1.0);
+}
+
+//-------------------------------------------------
+// Calculate a pattern based on the texture coordinates
+float checkerboard(vec2 tex_coords, float scale) {
+  float s = tex_coords[0];
+  float t = tex_coords[1];
+
+  float sum = floor(s * scale) + floor(t * scale);
+  bool isEven = mod(sum,2.0)==0.0;
+  float percent = (isEven) ? 1.0 : 0.0;
+
+  return percent;
+}
+
+vec3 checkerboard2(vec2 tex_coords, float BlocksPerRow) {
+         float x = 0.5*(tex_coords.x+1.0); // range [0,1]
+         float y = 0.5*(tex_coords.y+1.0); // range [0,1]
+         if ((mod(BlocksPerRow*x, 1.0) < 0.5) ^^ (mod(BlocksPerRow*y, 1.0) < 0.5))
+         {
+            color = vec3(0.0,0.0,0.0);
+         }
+         else
+         {
+            //color = vec3(x,1.0,1.0-y);
+            color = vec3(1.0,1.0,1.0);
+         }
+  return color;
+}
+
+
+vec3 checkerboard3D(vec3 tex_coords, float scale) {
+        float a = floor(tex_coords.x * scale);
+        float b = floor(tex_coords.y * scale);
+        float c = floor(tex_coords.z * scale);
+        if (mod(a+b+c, 2.0) > 0.5) {  // a+b+c is odd
+            color = vec3(0.0,0.0,0.0); //(0.5, 1.0, 0.5);
+        }
+        else {  // a+b+c is even
+            color = vec3(1.0,1.0,1.0); //(1.0, 1.0, 0.4);
+        }
+    return color;
+}
+
+// Calculate a pattern based on the texture coordinates
+float checkerboard3(vec2 tex_coords, float scale) {
+  float s = tex_coords[0];
+  float t = tex_coords[1];
+
+  float sum = floor(s * scale) + floor(t * scale);
+  bool isEven = mod(sum,2.0)==0.0;
+  float percent = (isEven) ? 1.0 : 0.0;
+
+  return percent;
+}
+
+float checkerboard5(vec3 tex_coords, float scale) {
+  float a = tex_coords[0];
+  float b = tex_coords[1];
+  float c = tex_coords[2];
+
+  //float sum = floor(a * scale) + floor(b * scale)+ floor(c * scale); // same pattern for each face
+  float sum = floor(a * scale) + floor(b * 2.0*scale)+ floor(c *3.0*scale); // 3 different patterns
+  bool isEven = mod(sum,2.0)==0.0;
+  float percent = (isEven) ? 1.0 : 0.0;
+
+  return percent;
+}
+
+vec4 gradient2(vec2 tex_coords) { // Gradients 
+    vec3 red = vec3(1.0, 0.0, 0.0);
+    vec3 blue = vec3(0.0, 1.0, 0.0);
+    float s = tex_coords[0];
+    float t = tex_coords[1];
+
+    float percent = abs(sin(s * 2.0*M_PI));
+    return vec4( red * percent + blue * (1.0-percent), 1.0);
+}
+
+//-------------------------------------------------
+// Calculate a color based on a pattern defined
+// by the texture coordinates
+vec4 overlay(vec2 tex_coords) { 
+  vec3 red = vec3(1.0, 0.0, 0.0);
+
+  float percent = checkerboard3(tex_coords, 4.0);
+
+  return vec4(red * percent, 1.0);
+}
+
+vec4 overlay3D(vec3 tex_coords) { // Overlaid patterns 
+// n is the number of patterns to overlay, scale is controlling the scale of each pattern, and the (1.0/float(n)) fraction is taking an equal percentage of each pattern. That gives us many options for controlling this texture map. 
+
+  vec3 red = vec3(1.0, 0.0, 0.0);
+  //float percent = checkerboard5(tex_coords, 4.0);
+  //float percent = 0.5 * checkerboard5(tex_coords, 4.0) + 0.5 * checkerboard5(tex_coords, 6.0);
+  // Set the starting scale of the pattern
+  float scale = 2.0;
+  float percent = 0.0;
+  for (int j=0; j<n; j++) {
+    percent += (1.0/float(n)) * checkerboard5(tex_coords, scale);
+    // Increase the scale of the pattern
+    scale *= 2.0;
+  }
+  return vec4(red * percent, 1.0);
+}
+
+vec4 overlay3Dwp(vec3 tex_coords, float scale, float percent, float sign) { // Overlaid patterns 
+// n is the number of patterns to overlay, scale is controlling the scale of each pattern, and the (1.0/float(n)) fraction is taking an equal percentage of each pattern. That gives us many options for controlling this texture map. (1.0/float(n)), the combination technique. 
+  vec3 red = vec3(1.0, 0.0, 0.0);
+  for (int j=0; j<n; j++) {
+    //percent += sign * checkerboard5(tex_coords, scale);
+    // use a weighted percentage that treats some of the patterns as more important.
+    percent += (1.0/pow(2.0,float(j+1))) * checkerboard5(tex_coords, scale);
+    scale *= 2.0;
+    sign = -sign;
+  }
+  
+  return vec4(red * percent, 1.0);
+}
+
+
+void main()
+{
+    // uncomment only one line then run it.
+    //gl_FragColor = gradient(vTextureCoord);
+    //gl_FragColor = overlay(vTextureCoord);
+    //gl_FragColor = vec4(checkerboard2(vTextureCoord, 4.0), 1.0);// good for 2 faces.
+    //gl_FragColor = vec4(checkerboard3D(fPosition, 4.0), 1.0); // good for 6 faces
+    //gl_FragColor = gradient2(vTextureCoord); // ?
+    gl_FragColor = overlay3D(fPosition);
+    //gl_FragColor = overlay3Dwp(fPosition, 2.0, 0.0, 1.0);
+    
+}
+</script>
+</head>
+<body>
+<canvas id="webgl-canvas" width="512" height="512" style="background-color: #0000FF"></canvas>
+</body>
+</html>

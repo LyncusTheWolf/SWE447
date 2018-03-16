@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../Common/webgl-utils.js"></script>
+  <script src="../Common/initShaders.js"></script>
+  <script src="../Common/MV.js"></script>
+  <script src="rCube.js"></script>
+  <script src="cube.js"></script>
+  
+<script id="Cube-vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+uniform mat4 MV;
+uniform mat4  P;
+
+attribute vec2 aTextureCoord;
+varying vec2 vTextureCoord;
+attribute vec3 aVertexNormal;
+varying highp vec4 transformedVertex;
+varying highp vec4 transformedNormal;
+
+
+void main()
+{
+	//gl_Position = P * MV * vPosition;
+	vTextureCoord = aTextureCoord;
+    // Apply lighting effect
+
+    // Perform the model and view transformations on the vertex and pass this
+    // location to the fragment shader.   
+    transformedVertex = MV * vPosition;
+    
+    // Perform the model and view transformations on the vertex's normal vector
+    // and pass this normal vector to the fragment shader.
+    transformedNormal = MV * vec4(aVertexNormal, 0.0);
+    
+    gl_Position = P * transformedVertex;
+
+}
+</script>
+<script id = "Cube-fragment-shader" type="x-shader/x-fragment">
+precision highp float;
+varying vec2 vTextureCoord;
+uniform sampler2D uSampler;
+varying highp vec4 transformedVertex;
+varying highp vec4 transformedNormal;
+
+uniform vec3 u_AmbientLight; // vec3(0.2, 0.2, 0.2); 
+uniform vec3 u_Light_color; // vec3(1.0, 1.0, 1.0);
+uniform vec3 u_Light_position; // vec3(0.0, 0.0, 1.0);
+uniform float u_Shininess; // 40.0;
+
+
+void main()
+{
+    highp float cos_angle;
+    vec3 diffuse_color;
+    vec3 specular_color;
+    vec3 ambient_color;
+    vec3 color;
+
+    highp vec4 v_Color = texture2D(uSampler, vTextureCoord);
+
+    // Calculate the ambient color as a percentage of the surface color
+    ambient_color = u_AmbientLight * vec3(v_Color);
+    // Calculate a vector from the fragment location to the light source
+    highp vec3 directionalVector = normalize(u_Light_position - vec3(transformedVertex));
+    // The vertex's normal vector is being interpolated across the primitive
+    // which can make it un-normalized. So normalize the vertex's normal vector.
+    vec3 vertex_normal = normalize( transformedNormal.xyz );
+    //****************Diffuse**************
+    // Calculate the cosine of the angle between the vertex's normal vector
+    // and the vector going to the light.
+    cos_angle = max(dot(vertex_normal, directionalVector), 0.0);
+    
+    // Scale the color of this fragment based on its angle to the light.
+    diffuse_color = vec3(v_Color) * cos_angle;
+    //****** Specular******
+    // Calculate the reflection vector
+    highp vec3 reflection = 2.0 * dot(vertex_normal, directionalVector) * vertex_normal - directionalVector;
+    // Calculate a vector from the fragment location to the camera.
+    // The camera is at the origin, so negating the vertex location gives the vector
+    highp vec3 to_camera = -1.0 * vec3(transformedVertex);
+    // Calculate the cosine of the angle between the reflection vector
+    // and the vector going to the camera.
+    reflection = normalize( reflection );
+    to_camera = normalize( to_camera );
+    //highp float cos_angle = dot(reflection, to_camera);
+    //cos_angle = clamp(cos_angle, 0.0, 1.0);
+    cos_angle = max(dot(reflection, to_camera), 0.0);
+    cos_angle = pow(cos_angle, u_Shininess);
+    // The specular color is from the light source, not the object
+    if (cos_angle > 0.0) {
+        specular_color = u_Light_color * cos_angle;
+        diffuse_color = diffuse_color * (1.0 - cos_angle);
+    } else {
+        specular_color = vec3(0.0, 0.0, 0.0);
+    }
+
+    color = ambient_color + diffuse_color + specular_color;
+    gl_FragColor = vec4(color, v_Color.a);
+  
+}
+</script>
+</head>
+<body>
+<canvas id="webgl-canvas" width="512" height="512" style="background-color: #0000FF"></canvas>
+</body>
+</html>
