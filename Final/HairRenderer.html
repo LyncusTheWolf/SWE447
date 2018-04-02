@@ -16,16 +16,44 @@
 		<script src="../Common/three.js"></script>
 		
 		<script type="x-shader/x-vertex" id="vertexShader">
+			varying vec3 vecPos;
+			varying vec3 vecNormal;
+			
 			void main(){
 				vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+				vecPos = modelViewPosition.xyz;
+				vecNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz;
 				gl_Position = projectionMatrix * modelViewPosition;
 			}
 		</script>
 		
 		<script type="x-shader/x-fragment" id="fragmentShader">
+			precision highp float;
+			
+			varying vec3 vecPos;
+			varying vec3 vecNormal;
+			
+			uniform float lightIntensity;
+		
+			struct PointLight{
+				vec3 color;
+				vec3 position;
+				float distance;
+			};
+			
+			uniform PointLight pointLights[NUM_POINT_LIGHTS];
 		
 			void main(){
-				gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+				vec3 diffuse = vec3(0.3, 0.3, 0.0);
+				
+				vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
+				
+				for(int i = 0; i < NUM_POINT_LIGHTS; i++){
+					vec3 lightDir = normalize(vecPos - pointLights[i].position);
+					addedLights.rgb += clamp(dot(-lightDir, vecNormal), 0.0, 1.0) * pointLights[i].color * lightIntensity;
+				}
+			
+				gl_FragColor = vec4(diffuse, 1.0) * addedLights;
 			}
 		</script>
 		
@@ -76,13 +104,28 @@
 			var light = new THREE.AmbientLight(0xffffff, 0.5);
 			scene.add(light);
 			
+			var light = new THREE.PointLight(0xffffff, 1.0);
+			light.position.set(0.0, 0.0, 0.1);
+			scene.add(light);
+			
 			//create a blue LineBasicMaterial
 			//var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
 			
 			var material = new THREE.ShaderMaterial({
+				uniforms: THREE.UniformsUtils.merge([
+					THREE.UniformsLib['lights'],
+					{
+						lightIntensity: {type: 'f', value: 5.0}
+						//textureSampler: {type: 't', value: null}
+					}
+				]),
 				vertexShader: document.getElementById('vertexShader').textContent,
-				fragmentShader: document.getElementById('fragmentShader').textContent
+				fragmentShader: document.getElementById('fragmentShader').textContent,
+				//transparent: true,
+				lights: true
 			});
+			
+			material.needsUpdate = true;
 			
 			var detailDelta = 1.0 / detailLevel;
 			
@@ -99,9 +142,16 @@
 				
 				var line = new THREE.Line( geometry, material );
 				scene.add( line );
-			}			
+			}
+
+			var delta = 0.0;
 			
-			function animate() {				
+			function animate() {
+				delta += 0.01;
+			
+				camera.position.set(Math.sin(delta * 3) * 100, 0, Math.cos(delta * 3) * 100);
+				camera.lookAt(new THREE.Vector3(0, 0, 0));
+			
 				requestAnimationFrame( animate );
 				
 				renderer.render( scene, camera );
