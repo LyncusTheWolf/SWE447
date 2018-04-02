@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Hair Shader</title>
+		<style>
+			body { 
+				margin: 0;
+				overflow: hidden;
+			}
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<canvas id="myCanvas"></canvas>
+		<script src="../Common/three.js"></script>
+		
+		<script type="x-shader/x-vertex" id="vertexShader">
+			void main(){
+				vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+				gl_Position = projectionMatrix * modelViewPosition;
+			}
+		</script>
+		
+		<script type="x-shader/x-fragment" id="fragmentShader">
+		
+			void main(){
+				gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+			}
+		</script>
+		
+		<script>
+			/*float4 bezier(float4 p0, float4 p1, float4 p2, float t) {
+				float oneMinusT = 1.0 - t;
+				return
+					oneMinusT * oneMinusT * p0 +
+					2.0f * oneMinusT * t * p1 +
+					t * t * p2;
+			}*/
+			
+			function bezier(p0, p1, p2, t){
+				var temp0 = p0.clone();
+				var temp1 = p1.clone();
+				var temp2 = p2.clone();
+				var oneMinusT = 1.0 - t;
+				
+				temp0.multiplyScalar(oneMinusT * oneMinusT);
+				temp1.multiplyScalar(2.0 * oneMinusT * t);
+				temp2.multiplyScalar(t * t);
+				//return (oneMinusT * oneMinusT * p0) + (2.0 * oneMinusT * t * p1) + (t * t * p2);
+				return temp0.add(temp1).add(temp2);
+			}
+			
+			var detailLevel = 20;
+		
+			var renderer;
+			var scene;
+			var camera;
+			var myCanvas = document.getElementById('myCanvas');
+			
+			//RENDERER
+			renderer = new THREE.WebGLRenderer({canvas: myCanvas, antialias: true});
+			renderer.setClearColor(0xffffff);
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			
+			//CAMERA
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500);
+			camera.position.set(0, 0, 100);
+			camera.lookAt(new THREE.Vector3(0, 0, 0));
+			
+			//SCENE
+			scene = new THREE.Scene();
+			
+			//LIGHTS
+			var light = new THREE.AmbientLight(0xffffff, 0.5);
+			scene.add(light);
+			
+			//create a blue LineBasicMaterial
+			//var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+			
+			var material = new THREE.ShaderMaterial({
+				vertexShader: document.getElementById('vertexShader').textContent,
+				fragmentShader: document.getElementById('fragmentShader').textContent
+			});
+			
+			var detailDelta = 1.0 / detailLevel;
+			
+			for(var j = 0; j < 20; j++){							
+				var geometry = new THREE.Geometry();
+				
+				var p0 = new THREE.Vector3(Math.sin(j), Math.cos(j), Math.sin(j)).multiplyScalar(25);
+				var p1 = new THREE.Vector3(Math.cos(j), Math.sin(j), Math.cos(j)).multiplyScalar(25);
+				var p2 = new THREE.Vector3(Math.cos(j), Math.cos(j), Math.sin(j)).multiplyScalar(25);
+				
+				for(var i = 0.0; i <= 1.0; i += detailDelta){
+					geometry.vertices.push(bezier(p0, p1, p2, i));
+				}
+				
+				var line = new THREE.Line( geometry, material );
+				scene.add( line );
+			}			
+			
+			function animate() {				
+				requestAnimationFrame( animate );
+				
+				renderer.render( scene, camera );
+			}
+			animate();
+		</script>
+	</body>
+</html>	
