@@ -129,7 +129,7 @@
 			
 			var detailDelta = 1.0 / detailLevel;
 			
-			for(var j = 0; j < 20; j++){							
+			for(var j = 0; j < 300; j++){							
 				var geometry = new THREE.Geometry();
 				
 				var p0 = new THREE.Vector3(Math.sin(j), Math.cos(j), Math.sin(j)).multiplyScalar(25);
@@ -149,7 +149,7 @@
 			function animate() {
 				delta += 0.01;
 			
-				camera.position.set(Math.sin(delta * 3) * 100, 0, Math.cos(delta * 3) * 100);
+				camera.position.set(Math.sin(delta) * 100, 0, Math.cos(delta) * 100);
 				camera.lookAt(new THREE.Vector3(0, 0, 0));
 			
 				requestAnimationFrame( animate );
