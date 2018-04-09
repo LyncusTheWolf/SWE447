@@ -16,14 +16,23 @@
 		<script src="../Common/three.js"></script>
 		
 		<script type="x-shader/x-vertex" id="vertexShader">
+			attribute float strandStepAttr;
+		
 			varying vec3 vecPos;
 			varying vec3 vecNormal;
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+			varying float strandStep;
+			
+			vec3 lightPos = vec3(10.0, -3.0, 20.0);
 			
 			void main(){
-				vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-				vecPos = modelViewPosition.xyz;
+				vecPos = (modelMatrix * vec4(position, 1.0)).xyz;
 				vecNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz;
-				gl_Position = projectionMatrix * modelViewPosition;
+				lightDir = normalize(lightPos - vecPos);
+				viewDir = normalize(cameraPosition - vecPos);
+				strandStep = strandStepAttr;
+				gl_Position = projectionMatrix * viewMatrix * vec4(vecPos, 1.0);
 			}
 		</script>
 		
@@ -32,6 +41,9 @@
 			
 			varying vec3 vecPos;
 			varying vec3 vecNormal;
+			varying vec3 lightDir;
+			varying vec3 viewDir;
+			varying float strandStep;
 			
 			/*uniform float lightIntensity;
 		
@@ -42,18 +54,41 @@
 			};
 			
 			uniform PointLight pointLights[NUM_POINT_LIGHTS];*/
+			
+			float specularIntensity = 0.7;
+			float rootShift = 0.2;
+			float tipShift = 0.8;
+			float ex1 = 0.95;
+			float ex2 = 0.02;
+			float spec1 = 0.5;
+			float spec2 = 0.1;
 		
 			void main(){
-				vec3 diffuse = vec3(0.3, 0.3, 0.0);
+				vec3 baseColor = vec3(0.5, 0.3, 0.1);
+				vec3 tangent = vecNormal;
 				
-				/*vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
+				//http://developer.amd.com/wordpress/media/2012/10/Scheuermann_HairRendering.pdf
 				
-				for(int i = 0; i < NUM_POINT_LIGHTS; i++){
-					vec3 lightDir = normalize(vecPos - pointLights[i].position);
-					addedLights.rgb += clamp(dot(-lightDir, vecNormal), 0.0, 1.0) * pointLights[i].color * lightIntensity;
-				}*/
+				float cosTL = dot(tangent, lightDir);
+				float sinTL = 1.0 - cosTL * cosTL;
+				float diffuse = sinTL;
+				
+				float cosTRL = -cosTL;
+				float sinTRL = sinTL;
+				float cosTE = dot(tangent, viewDir);
+				float sinTE = sqrt(1.0 - cosTE * cosTE);
+				
+				float cosTRL_root = cosTRL * cos(0.5 * strandStep) - sinTRL * sin(0.5 * strandStep);
+				float sinTRL_root = sqrt(1.0 - cosTRL_root * cosTRL_root);
+				float specular_root = max(0.0, cosTRL_root * cosTE + sinTRL_root * sinTE);
+				
+				float cosTRL_tip = cosTRL * cos(0.8 * strandStep) - sinTRL * sin(0.8 * strandStep);
+				float sinTRL_tip = sqrt(1.0 - cosTRL_tip * cosTRL_tip);
+				float specular_tip = max(0.0, cosTRL_tip * cosTE + sinTRL_tip * sinTE);
+				
+				vec3 finalColor = baseColor + (diffuse * baseColor + specularIntensity * (spec1 * pow(specular_root, ex1) + spec2 * pow(specular_tip, ex2)));
 			
-				gl_FragColor = vec4(diffuse /* + addedLights.xyz*/, 1.0);// * addedLights;
+				gl_FragColor = vec4(finalColor, 1.0);// * addedLights;
 			}
 		</script>
 		
@@ -92,6 +127,9 @@
 			var detailLevel = 20;
 		
 			var time;
+
+			var timeLastFrame = 0.0;
+			var deltaTime = 0.0;
 			var renderer;
 			var scene;
 			var camera;
@@ -140,29 +178,38 @@
 			
 			var detailDelta = 1.0 / (detailLevel - 1);
 			
-			var hairStrandCount = 16;
+			var hairStrandCount = 4000;
 			var geometry = new THREE.BufferGeometry();
 			var positions = [];
 			var normals = [];
+			//Two seperate index arrays, one for the stride buffer and one as an attribute buffer
+			var strandSteps = [];
 			var indices = [];
 			var curIndex = 0;
 			var stiffness = 0.999;
 			var hairLength = 20.0;
 			var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
 			
+			var piStep = (Math.PI * 2.0 / hairStrandCount);
+			
 			//Build the initial geometry
 			for(var j = 0; j < hairStrandCount; j++){			
-				var p0 = new THREE.Vector3(Math.sin(j), 0, Math.cos(j)).multiplyScalar(5);
-				var p1 = new THREE.Vector3(Math.sin(j), 0, Math.cos(j)).multiplyScalar(25);
-				var p2 = new THREE.Vector3(Math.sin(j), -1, Math.cos(j)).multiplyScalar(25);
+				var p0 = new THREE.Vector3(Math.sin(j * piStep), 0, Math.cos(j)).multiplyScalar(15);
+				p0.y = 10;
+				//var p1 = new THREE.Vector3(Math.sin(j), 0, Math.cos(j)).multiplyScalar(25);
+				//var p2 = new THREE.Vector3(Math.sin(j), -1, Math.cos(j)).multiplyScalar(25);
 				
 				//indices.push(j * detailLevel);
 				
+				//Construct the positions arrays
 				for(var i = 0; i < detailLevel; i++){
 					curIndex = j * detailLevel + i;
-					indices.push(curIndex);
 					
-					var rootDir = new THREE.Vector3(Math.sin(j), 0, Math.cos(j));
+					//Push the vertex index into the index buffers
+					indices.push(curIndex);
+					strandSteps.push(i / (detailLevel - 1));
+					
+					var rootDir = new THREE.Vector3(Math.sin(j * piStep), 0, Math.cos(j * piStep));
 				
 					//var bezierVec = bezier(p0, p1, p2, i * detailDelta);
 					var bezierVec = getStepSample(p0, rootDir, gravity, hairLength, stiffness, i * detailDelta);
@@ -174,6 +221,7 @@
 					}
 				}
 
+				//Use the position arrays to construct a normals array
 				for(var i = 0; i < detailLevel; i++){
 					var rootDir;
 					
@@ -199,7 +247,8 @@
 			//console.log(indices);
 			geometry.setIndex(indices);
 			geometry.addAttribute('position', new THREE.Float32BufferAttribute( positions, 3));
-			geometry.addAttribute('normal', new THREE.Float32BufferAttribute( normals, 3));			
+			geometry.addAttribute('normal', new THREE.Float32BufferAttribute( normals, 3));
+			geometry.addAttribute('strandStepAttr', new THREE.Float32BufferAttribute(strandSteps, 1));				
 			var line = new THREE.LineSegments( geometry, material );
 			scene.add( line );
 
@@ -207,38 +256,127 @@
 			var delta = 0.0;
 			
 			var panSpeed = 0.15;
+			var damping = 0.15;
 			
 			function updatePositions(){
 				positions = line.geometry.attributes.position.array;
+				normals = line.geometry.attributes.normal.array;
 				
-				var forceVector = new THREE.Vector3(0.0, Math.sin(time + Math.PI * 0.5) * 0.15, 0.0);
+				var windMag = (Math.sin(time * 3.0) + 1) * 0.5; 
+				var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
+				var windForce = new THREE.Vector3(windMag * windMag * 5.0, 0.0, 0.0);
+				var detailMinusOne = detailLevel - 1;
+				
+
 				
 				for(var j = 0; j < hairStrandCount; j++){
-					var tangentX = Math.cos(j) * Math.sin(time);
-					var tangentZ = Math.sin(j) * Math.sin(time);
+					//console.log(j % 5);
+					var dampingFactor = (j % 5) * damping;
+					//console.log(dampingFactor);
+				
+					var rootIndex = j * detailLevel;
+					
+					var computationPosX = [];
+					var computationPosY = [];
+					var computationPosZ = [];
+					
+					//Initialize Local index values;
 					for(var i = 0; i < detailLevel; i++){
 						var vertIndex = (j * detailLevel + i) * 3;
 						
-						positions[vertIndex] += forceVector.x * i * detailDelta;
-						positions[vertIndex + 1] += forceVector.y * i * detailDelta;
-						positions[vertIndex + 2] += forceVector.z * detailDelta;
+						computationPosX.push(positions[vertIndex]);
+						computationPosY.push(positions[vertIndex + 1]);
+						computationPosZ.push(positions[vertIndex + 2]);
+					}
+					
+					//Apply forces in positions
+					for(var i = 1; i < detailLevel; i++){
+						var windFactor = (j % 5) * windForce;
+						var tempX = computationPosX[i] + (windForce.x + gravity.x) * deltaTime;
+						tempX += dampingFactor * (computationPosX[i] - tempX);
+						computationPosX[i] = tempX;
+						
+						var tempY = computationPosY[i] + gravity.y * deltaTime;
+						tempY += dampingFactor * (computationPosY[i] - tempY);
+						computationPosY[i] = tempY;
+						
+						var tempZ = computationPosZ[i] + gravity.z * deltaTime;
+						tempZ += dampingFactor * (computationPosZ[i] - tempZ);
+						computationPosZ[i] = tempZ;
+					}
+					
+					//Apply length constraints
+					for(var i = 1; i < detailLevel; i++){
+						var dirX;
+						var dirY;
+						var dirZ;
+						
+						dirX = computationPosX[i] - computationPosX[i - 1];
+						dirY = computationPosY[i] - computationPosY[i - 1];
+						dirZ = computationPosZ[i] - computationPosZ[i - 1];
+					
+						var hLength = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+						var offset = Math.min(hLength, 1.0) / hLength;
+						
+						computationPosX[i] = computationPosX[i - 1] + dirX * offset;
+						computationPosY[i] = computationPosY[i - 1] + dirY * offset;
+						computationPosZ[i] = computationPosZ[i - 1] + dirZ * offset;
+					}
+					
+					//Bake in positions
+					for(var i = 0; i < detailLevel; i++){
+						var vertIndex = (j * detailLevel + i) * 3;
+						
+						positions[vertIndex] = computationPosX[i];
+						positions[vertIndex + 1] = computationPosY[i];
+						positions[vertIndex + 2] = computationPosZ[i];
+					}
+					
+					//Bake in normals
+					for(var i = 0; i < detailLevel; i++){
+						var vertIndex = (j * detailLevel + i) * 3;
+						
+						//If at the tip, get the normal of the previous vert
+						if(i == detailMinusOne){
+							normals[vertIndex] = normals[vertIndex - 3];
+							normals[vertIndex + 1] = normals[vertIndex - 2];
+							normals[vertIndex + 2] = normals[vertIndex - 1];
+						} else {
+							var normDir = (new THREE.Vector3(
+								computationPosX[i + 1] - computationPosX[i],
+								computationPosY[i + 1] - computationPosY[i],
+								computationPosZ[i + 1] - computationPosZ[i],
+							)).normalize();
+							
+							normals[vertIndex] = normDir.x;
+							normals[vertIndex + 1] = normDir.y;
+							normals[vertIndex + 2] = normDir.z;
+						}
 					}
 				}
 				
 				//line.geometry.attributes.position.array = positions;
 				line.geometry.attributes.position.needsUpdate = true;
+				line.geometry.attributes.normal.needsUpdate = true;
 			}
+			
+			
 			
 			function animate() {
 				time = performance.now() * 0.001;
+				deltaTime = time - timeLastFrame;
+				timeLastFrame = time;
 				//delta += 0.01;
 			
-				camera.position.set(Math.sin(time * panSpeed) * 100, 25, Math.cos(time * panSpeed) * 100);
-				camera.lookAt(new THREE.Vector3(0, 0, 0));
+				camera.position.set(Math.sin(time * 0.15) * 15, 25, 50);
+				camera.lookAt(new THREE.Vector3(0, -5, 0));
+			
+				//camera.position.set(Math.sin(time * panSpeed) * 100, 25, Math.cos(time * panSpeed) * 100);
+				//camera.lookAt(new THREE.Vector3(0, 0, 0));
 			
 				requestAnimationFrame( animate );
 				
-				updatePositions();
+				updatePositions(deltaTime);
 				
 				renderer.render( scene, camera );
 			}
