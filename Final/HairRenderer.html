@@ -14,6 +14,7 @@
 	<body>
 		<canvas id="myCanvas"></canvas>
 		<script src="../Common/three.js"></script>
+		<script src="../Common/dat.gui.min.js"></script>
 		
 		<script type="x-shader/x-vertex" id="vertexShader">
 			attribute float strandStepAttr;
@@ -29,7 +30,7 @@
 			void main(){
 				vecPos = (modelMatrix * vec4(position, 1.0)).xyz;
 				vecNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz;
-				lightDir = normalize(lightPos - vecPos);
+				lightDir = normalize(lightPos /* - vecPos*/);
 				viewDir = normalize(cameraPosition - vecPos);
 				strandStep = strandStepAttr;
 				gl_Position = projectionMatrix * viewMatrix * vec4(vecPos, 1.0);
@@ -55,13 +56,14 @@
 			
 			uniform PointLight pointLights[NUM_POINT_LIGHTS];*/
 			
-			float specularIntensity = 0.7;
-			float rootShift = 0.2;
-			float tipShift = 0.8;
-			float ex1 = 0.95;
-			float ex2 = 0.02;
-			float spec1 = 0.5;
-			float spec2 = 0.1;
+			uniform float specularIntensity;
+			uniform float diffuseIntensity;
+			uniform float rootShift;
+			uniform float tipShift;
+			uniform float ex1;
+			uniform float ex2;
+			uniform float spec1;
+			uniform float spec2;
 		
 			void main(){
 				vec3 baseColor = vec3(0.5, 0.3, 0.1);
@@ -78,17 +80,17 @@
 				float cosTE = dot(tangent, viewDir);
 				float sinTE = sqrt(1.0 - cosTE * cosTE);
 				
-				float cosTRL_root = cosTRL * cos(0.5 * strandStep) - sinTRL * sin(0.5 * strandStep);
+				float cosTRL_root = cosTRL * cos(rootShift * strandStep) - sinTRL * sin(rootShift * strandStep);
 				float sinTRL_root = sqrt(1.0 - cosTRL_root * cosTRL_root);
 				float specular_root = max(0.0, cosTRL_root * cosTE + sinTRL_root * sinTE);
 				
-				float cosTRL_tip = cosTRL * cos(0.8 * strandStep) - sinTRL * sin(0.8 * strandStep);
+				float cosTRL_tip = cosTRL * cos(tipShift * strandStep) - sinTRL * sin(tipShift * strandStep);
 				float sinTRL_tip = sqrt(1.0 - cosTRL_tip * cosTRL_tip);
 				float specular_tip = max(0.0, cosTRL_tip * cosTE + sinTRL_tip * sinTE);
 				
-				vec3 finalColor = baseColor + (diffuse * baseColor + specularIntensity * (spec1 * pow(specular_root, ex1) + spec2 * pow(specular_tip, ex2)));
+				vec3 finalColor = baseColor + (diffuseIntensity * diffuse * baseColor + specularIntensity * (spec1 * pow(specular_root, ex1) + spec2 * pow(specular_tip, ex2)));
 			
-				gl_FragColor = vec4(finalColor, 1.0);// * addedLights;
+				gl_FragColor = vec4(finalColor, 1.0);
 			}
 		</script>
 		
@@ -161,17 +163,20 @@
 			//var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
 			
 			var material = new THREE.ShaderMaterial({
-				uniforms: THREE.UniformsUtils.merge([
-					THREE.UniformsLib['lights'],
-					{
-						lightIntensity: {type: 'f', value: 5.0}
-						//textureSampler: {type: 't', value: null}
-					}
-				]),
+				uniforms: {								
+					specularIntensity: {value: 0.9},
+					diffuseIntensity: {value: 0.2},
+					rootShift: {value: 0.2},
+					tipShift: {value: 0.8},
+					ex1: {value: 60},
+					ex2: {value: 25},
+					spec1: {value: 0.5},
+					spec2: {value: 0.1}
+				},
 				vertexShader: document.getElementById('vertexShader').textContent,
 				fragmentShader: document.getElementById('fragmentShader').textContent,
 				//transparent: true,
-				lights: true
+				//lights: true
 			});
 			
 			material.needsUpdate = true;
@@ -256,19 +261,21 @@
 			var delta = 0.0;
 			
 			var panSpeed = 0.15;
-			var damping = 0.15;
+			var damping = 0.05;
+			var windCycle = 3.0;
+			var windMagnitude = 12;
 			
 			function updatePositions(){
 				positions = line.geometry.attributes.position.array;
 				normals = line.geometry.attributes.normal.array;
 				
-				var windMag = (Math.sin(time * 3.0) + 1) * 0.5; 
+				var windMag = (Math.sin(time * windCycle) + 1) * 0.5; 
 				var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
-				var windForce = new THREE.Vector3(windMag * windMag * 5.0, 0.0, 0.0);
+				var windForce = new THREE.Vector3(1.0, 0.3, 0.2).multiplyScalar(windMag * windMag * windMagnitude);
 				var detailMinusOne = detailLevel - 1;
 				
 
-				
+				//Iterate across all the vertices in the strand
 				for(var j = 0; j < hairStrandCount; j++){
 					//console.log(j % 5);
 					var dampingFactor = (j % 5) * damping;
@@ -281,6 +288,7 @@
 					var computationPosZ = [];
 					
 					//Initialize Local index values;
+					//Unpack the vertices in order to save on computation time
 					for(var i = 0; i < detailLevel; i++){
 						var vertIndex = (j * detailLevel + i) * 3;
 						
@@ -296,11 +304,11 @@
 						tempX += dampingFactor * (computationPosX[i] - tempX);
 						computationPosX[i] = tempX;
 						
-						var tempY = computationPosY[i] + gravity.y * deltaTime;
+						var tempY = computationPosY[i] + (windForce.y + gravity.y) * deltaTime;
 						tempY += dampingFactor * (computationPosY[i] - tempY);
 						computationPosY[i] = tempY;
 						
-						var tempZ = computationPosZ[i] + gravity.z * deltaTime;
+						var tempZ = computationPosZ[i] + (windForce.z + gravity.z) * deltaTime;
 						tempZ += dampingFactor * (computationPosZ[i] - tempZ);
 						computationPosZ[i] = tempZ;
 					}
@@ -324,6 +332,7 @@
 					}
 					
 					//Bake in positions
+					//Repack the vertices into the positions array
 					for(var i = 0; i < detailLevel; i++){
 						var vertIndex = (j * detailLevel + i) * 3;
 						
@@ -360,15 +369,71 @@
 				line.geometry.attributes.normal.needsUpdate = true;
 			}
 			
+			param = {
+				"Diffuse Intensity" : line.material.uniforms.diffuseIntensity.value,
+				"Specular Intensity" : line.material.uniforms.specularIntensity.value,
+				"Root Shift" : line.material.uniforms.rootShift.value,
+				"Tip Shift" : line.material.uniforms.tipShift.value,
+				"Exp 1" : line.material.uniforms.ex1.value,
+				"Exp 2" : line.material.uniforms.ex2.value,
+				"Spec 1" : line.material.uniforms.spec1.value,
+				"Spec 2" : line.material.uniforms.spec2.value,			
+			}
 			
+			var gui = new dat.GUI({width: 300});
+			gui.open();
+			
+			var materialFolder = gui.addFolder("Material Properties");
+
+			//diffuseIntensity,
+			materialFolder.add(param, "Diffuse Intensity", 0.0, 1.0).step(0.05).onChange(function(val){
+				line.material.uniforms.diffuseIntensity.value = val;
+			});
+			
+			//specularIntensity,
+			materialFolder.add(param, "Specular Intensity", 0.0, 1.0).step(0.05).onChange(function(val){
+				line.material.uniforms.specularIntensity.value = val;
+			});
+
+			//rootShift
+			materialFolder.add(param, "Root Shift", 0.0, 10.0).step(0.01).onChange(function(val){
+				line.material.uniforms.rootShift.value = val;
+			});
+			
+			//tipShift
+			materialFolder.add(param, "Tip Shift", 0.0, 10.0).step(0.01).onChange(function(val){
+				line.material.uniforms.tipShift.value = val;
+			});
+			
+			//ex1
+			materialFolder.add(param, "Exp 1", 0.0, 100.0).step(0.05).onChange(function(val){
+				line.material.uniforms.ex1.value = val;
+			});
+			
+			//ex2
+			materialFolder.add(param, "Exp 2", 0.0, 100.0).step(0.05).onChange(function(val){
+				line.material.uniforms.ex2.value = val;
+			});
+			
+			//spec1
+			materialFolder.add(param, "Spec 1", 0.0, 1.0).step(0.05).onChange(function(val){
+				line.material.uniforms.spec1.value = val;
+			});
+			
+			//spec2
+			materialFolder.add(param, "Spec 2", 0.0, 1.0).step(0.05).onChange(function(val){
+				line.material.uniforms.spec2.value = val;
+			});
+			
+			materialFolder.open();
 			
 			function animate() {
 				time = performance.now() * 0.001;
 				deltaTime = time - timeLastFrame;
 				timeLastFrame = time;
-				//delta += 0.01;
+				//delta += 0.01;				
 			
-				camera.position.set(Math.sin(time * 0.15) * 15, 25, 50);
+				camera.position.set(15, 25, 50);
 				camera.lookAt(new THREE.Vector3(0, -5, 0));
 			
 				//camera.position.set(Math.sin(time * panSpeed) * 100, 25, Math.cos(time * panSpeed) * 100);
