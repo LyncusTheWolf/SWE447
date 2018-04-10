@@ -192,9 +192,9 @@
 			var hairLength = 20.0;
 			var geometry;
 			var line;
-			var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
 			
 			function initializeParticles(){
+				var gravity = new THREE.Vector3(0.0, gravityMagnitude, 0.0);
 				geometry = new THREE.BufferGeometry();
 				
 				positions = [];
@@ -291,9 +291,11 @@
 				
 				var strandStepLength = strandLength / detailLevel;
 				var windMag = (Math.sin(time * (1 / windCycle) * 2.0 * Math.PI) + 1) * 0.5; 
-				var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
+				var gravityForce = new THREE.Vector3(0.0, gravityMagnitude, 0.0);
 				var windForce = new THREE.Vector3(1.0, 0.3, 0.2).multiplyScalar(windMag * windMag * windMagnitude);
 				var detailMinusOne = detailLevel - 1;
+				
+				console.log(gravityForce.y);
 				
 
 				//Iterate across all the vertices in the strand
@@ -321,15 +323,15 @@
 					//Apply forces in positions
 					for(var i = 1; i < detailLevel; i++){
 						var windFactor = (j % 5) * windForce;
-						var tempX = computationPosX[i] + (windForce.x + gravity.x) * deltaTime;
+						var tempX = computationPosX[i] + (windForce.x + gravityForce.x) * deltaTime;
 						tempX += dampingFactor * (computationPosX[i] - tempX);
 						computationPosX[i] = tempX;
 						
-						var tempY = computationPosY[i] + (windForce.y + gravity.y) * deltaTime;
+						var tempY = computationPosY[i] + (windForce.y + gravityForce.y) * deltaTime;
 						tempY += dampingFactor * (computationPosY[i] - tempY);
 						computationPosY[i] = tempY;
 						
-						var tempZ = computationPosZ[i] + (windForce.z + gravity.z) * deltaTime;
+						var tempZ = computationPosZ[i] + (windForce.z + gravityForce.z) * deltaTime;
 						tempZ += dampingFactor * (computationPosZ[i] - tempZ);
 						computationPosZ[i] = tempZ;
 					}
