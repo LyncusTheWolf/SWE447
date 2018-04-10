@@ -394,6 +394,7 @@
 			
 			param = {
 				"Particle Strands": hairStrandCount,
+				"Particle Details": detailLevel,
 				"Strand Length": strandLength,
 				"Damping": damping,
 				"Damping Range": dampingRange,
@@ -418,6 +419,12 @@
 			
 			strandFolder.add(param, "Particle Strands", 5, 5000).step(1).onChange(function(val){
 				hairStrandCount = val;
+				scene.remove( line );
+				initializeParticles();
+			});
+			
+			strandFolder.add(param, "Particle Details", 3, 25).step(1).onChange(function(val){
+				detailLevel = val;
 				scene.remove( line );
 				initializeParticles();
 			});
