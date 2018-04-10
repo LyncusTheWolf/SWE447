@@ -174,9 +174,7 @@
 					spec2: {value: 0.1}
 				},
 				vertexShader: document.getElementById('vertexShader').textContent,
-				fragmentShader: document.getElementById('fragmentShader').textContent,
-				//transparent: true,
-				//lights: true
+				fragmentShader: document.getElementById('fragmentShader').textContent
 			});
 			
 			material.needsUpdate = true;
@@ -184,92 +182,115 @@
 			var detailDelta = 1.0 / (detailLevel - 1);
 			
 			var hairStrandCount = 4000;
-			var geometry = new THREE.BufferGeometry();
-			var positions = [];
-			var normals = [];
+			var positions;
+			var normals;
 			//Two seperate index arrays, one for the stride buffer and one as an attribute buffer
-			var strandSteps = [];
-			var indices = [];
-			var curIndex = 0;
+			var strandSteps;
+			var indices;
+			var curIndex;
 			var stiffness = 0.999;
 			var hairLength = 20.0;
+			var geometry;
+			var line;
 			var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
 			
-			var piStep = (Math.PI * 2.0 / hairStrandCount);
-			
-			//Build the initial geometry
-			for(var j = 0; j < hairStrandCount; j++){			
-				var p0 = new THREE.Vector3(Math.sin(j * piStep), 0, Math.cos(j)).multiplyScalar(15);
-				p0.y = 10;
-				//var p1 = new THREE.Vector3(Math.sin(j), 0, Math.cos(j)).multiplyScalar(25);
-				//var p2 = new THREE.Vector3(Math.sin(j), -1, Math.cos(j)).multiplyScalar(25);
+			function initializeParticles(){
+				geometry = new THREE.BufferGeometry();
 				
-				//indices.push(j * detailLevel);
+				positions = [];
+				normals = [];
+				//Two seperate index arrays, one for the stride buffer and one as an attribute buffer
+				strandSteps = [];
+				indices = [];
+				curIndex = 0;
 				
-				//Construct the positions arrays
-				for(var i = 0; i < detailLevel; i++){
-					curIndex = j * detailLevel + i;
-					
-					//Push the vertex index into the index buffers
-					indices.push(curIndex);
-					strandSteps.push(i / (detailLevel - 1));
-					
-					var rootDir = new THREE.Vector3(Math.sin(j * piStep), 0, Math.cos(j * piStep));
+				var piStep = (Math.PI * 2.0 / hairStrandCount);
 				
-					//var bezierVec = bezier(p0, p1, p2, i * detailDelta);
-					var bezierVec = getStepSample(p0, rootDir, gravity, hairLength, stiffness, i * detailDelta);
-					positions.push(bezierVec.x, bezierVec.y, bezierVec.z);
-					//normals.push(rootDir.x, rootDir.y, rootDir.z);
+				//Build the initial geometry
+				for(var j = 0; j < hairStrandCount; j++){			
+					var p0 = new THREE.Vector3(Math.sin(j * piStep), 0, Math.cos(j)).multiplyScalar(15);
+					p0.y = 10;
+					//var p1 = new THREE.Vector3(Math.sin(j), 0, Math.cos(j)).multiplyScalar(25);
+					//var p2 = new THREE.Vector3(Math.sin(j), -1, Math.cos(j)).multiplyScalar(25);
 					
-					if(i < detailLevel - 2){
-						indices.push(curIndex + 1);
+					//indices.push(j * detailLevel);
+					
+					//Construct the positions arrays
+					for(var i = 0; i < detailLevel; i++){
+						curIndex = j * detailLevel + i;
+						
+						//Push the vertex index into the index buffers
+						indices.push(curIndex);
+						strandSteps.push(i / (detailLevel - 1));
+						
+						var rootDir = new THREE.Vector3(Math.sin(j * piStep), 0, Math.cos(j * piStep));
+					
+						//var bezierVec = bezier(p0, p1, p2, i * detailDelta);
+						var bezierVec = getStepSample(p0, rootDir, gravity, hairLength, stiffness, i * detailDelta);
+						positions.push(bezierVec.x, bezierVec.y, bezierVec.z);
+						//normals.push(rootDir.x, rootDir.y, rootDir.z);
+						
+						if(i < detailLevel - 2){
+							indices.push(curIndex + 1);
+						}
 					}
-				}
 
-				//Use the position arrays to construct a normals array
-				for(var i = 0; i < detailLevel; i++){
-					var rootDir;
-					
-					var vertIndex = (j * detailLevel + i) * 3;
-					
-					if(i == detailLevel - 1){
-						normals.push(normals[vertIndex - 3], normals[vertIndex - 2], normals[vertIndex - 1]);
-					} else {
-						rootDir = (new THREE.Vector3(
-							positions[vertIndex + 3] - positions[vertIndex],
-							positions[vertIndex + 4] - positions[vertIndex + 1],
-							positions[vertIndex + 5] - positions[vertIndex + 2],
-						)).normalize();
-						normals.push(rootDir.x, rootDir.y, rootDir.z);
-					}					
-				}
+					//Use the position arrays to construct a normals array
+					for(var i = 0; i < detailLevel; i++){
+						var rootDir;
+						
+						var vertIndex = (j * detailLevel + i) * 3;
+						
+						if(i == detailLevel - 1){
+							normals.push(normals[vertIndex - 3], normals[vertIndex - 2], normals[vertIndex - 1]);
+						} else {
+							rootDir = (new THREE.Vector3(
+								positions[vertIndex + 3] - positions[vertIndex],
+								positions[vertIndex + 4] - positions[vertIndex + 1],
+								positions[vertIndex + 5] - positions[vertIndex + 2],
+							)).normalize();
+							normals.push(rootDir.x, rootDir.y, rootDir.z);
+						}					
+					}
 
+					
+					//var positions = line.geometry.attributes.position.array;
+
+				}
 				
-				//var positions = line.geometry.attributes.position.array;
-
+				//console.log(indices);
+				geometry.setIndex(indices);
+				geometry.addAttribute('position', new THREE.Float32BufferAttribute( positions, 3));
+				geometry.addAttribute('normal', new THREE.Float32BufferAttribute( normals, 3));
+				geometry.addAttribute('strandStepAttr', new THREE.Float32BufferAttribute(strandSteps, 1));				
+				line = new THREE.LineSegments( geometry, material );
+				
+				scene.add( line );
 			}
 			
-			//console.log(indices);
-			geometry.setIndex(indices);
-			geometry.addAttribute('position', new THREE.Float32BufferAttribute( positions, 3));
-			geometry.addAttribute('normal', new THREE.Float32BufferAttribute( normals, 3));
-			geometry.addAttribute('strandStepAttr', new THREE.Float32BufferAttribute(strandSteps, 1));				
-			var line = new THREE.LineSegments( geometry, material );
-			scene.add( line );
+			initializeParticles();
+			
+			
+			
 
 
 			var delta = 0.0;
 			
 			var panSpeed = 0.15;
 			var damping = 0.05;
+			var dampingRange = 0.0;
+			var dampingStep = 5;
 			var windCycle = 3.0;
 			var windMagnitude = 12;
+			var gravityMagnitude = -9.81;
+			var strandLength = 15.0;
 			
 			function updatePositions(){
 				positions = line.geometry.attributes.position.array;
 				normals = line.geometry.attributes.normal.array;
 				
-				var windMag = (Math.sin(time * windCycle) + 1) * 0.5; 
+				var strandStepLength = strandLength / detailLevel;
+				var windMag = (Math.sin(time * (1 / windCycle) * 2.0 * Math.PI) + 1) * 0.5; 
 				var gravity = new THREE.Vector3(0.0, -9.81, 0.0);
 				var windForce = new THREE.Vector3(1.0, 0.3, 0.2).multiplyScalar(windMag * windMag * windMagnitude);
 				var detailMinusOne = detailLevel - 1;
@@ -278,7 +299,7 @@
 				//Iterate across all the vertices in the strand
 				for(var j = 0; j < hairStrandCount; j++){
 					//console.log(j % 5);
-					var dampingFactor = (j % 5) * damping;
+					var dampingFactor = dampingRange * ((j % dampingStep) / dampingStep) + (1 - dampingRange) *  damping;
 					//console.log(dampingFactor);
 				
 					var rootIndex = j * detailLevel;
@@ -324,7 +345,7 @@
 						dirZ = computationPosZ[i] - computationPosZ[i - 1];
 					
 						var hLength = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
-						var offset = Math.min(hLength, 1.0) / hLength;
+						var offset = Math.min(hLength, strandStepLength) / hLength;
 						
 						computationPosX[i] = computationPosX[i - 1] + dirX * offset;
 						computationPosY[i] = computationPosY[i - 1] + dirY * offset;
@@ -370,6 +391,14 @@
 			}
 			
 			param = {
+				"Particle Strands": hairStrandCount,
+				"Strand Length": strandLength,
+				"Damping": damping,
+				"Damping Range": dampingRange,
+				"Damping Step": dampingStep,
+				"Wind Cycle Speed": windCycle,
+				"Wind Magnitude": windMagnitude,
+				"Gravity Magnitude": gravityMagnitude,			
 				"Diffuse Intensity" : line.material.uniforms.diffuseIntensity.value,
 				"Specular Intensity" : line.material.uniforms.specularIntensity.value,
 				"Root Shift" : line.material.uniforms.rootShift.value,
@@ -382,6 +411,44 @@
 			
 			var gui = new dat.GUI({width: 300});
 			gui.open();
+			
+			var strandFolder = gui.addFolder("Strand Properties");
+			
+			strandFolder.add(param, "Particle Strands", 5, 5000).step(1).onChange(function(val){
+				hairStrandCount = val;
+				scene.remove( line );
+				initializeParticles();
+			});
+			
+			strandFolder.add(param, "Strand Length", 0.05, 25.0).step(0.05).onChange(function(val){
+				strandLength = val;
+			});
+			
+			strandFolder.add(param, "Damping", 0.0, 1.0).step(0.05).onChange(function(val){
+				damping = val;
+			});
+			
+			strandFolder.add(param, "Damping Range", 0.0, 1.0).step(0.05).onChange(function(val){
+				dampingRange = val;
+			});
+			
+			strandFolder.add(param, "Damping Step", 1.0, 10.0).step(1.0).onChange(function(val){
+				dampingStep = val;
+			});
+			
+			strandFolder.add(param, "Wind Cycle Speed", 0.0, 30.0).step(0.01).onChange(function(val){
+				windCycle = val;
+			});
+			
+			strandFolder.add(param, "Wind Magnitude", 0.0, 30.0).step(0.05).onChange(function(val){
+				windMagnitude = val;
+			});
+			
+			strandFolder.add(param, "Gravity Magnitude", -25.0, 25.0).step(0.01).onChange(function(val){
+				gravityMagnitude = val;
+			});
+			
+			strandFolder.open();
 			
 			var materialFolder = gui.addFolder("Material Properties");
 
