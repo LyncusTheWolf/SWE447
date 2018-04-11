@@ -56,6 +56,7 @@
 			
 			uniform PointLight pointLights[NUM_POINT_LIGHTS];*/
 			
+			uniform vec3 baseColor;
 			uniform float specularIntensity;
 			uniform float diffuseIntensity;
 			uniform float rootShift;
@@ -66,7 +67,7 @@
 			uniform float spec2;
 		
 			void main(){
-				vec3 baseColor = vec3(0.5, 0.3, 0.1);
+				//vec3 baseColor = vec3(0.5, 0.3, 0.1);
 				vec3 tangent = vecNormal;
 				
 				//http://developer.amd.com/wordpress/media/2012/10/Scheuermann_HairRendering.pdf
@@ -163,7 +164,8 @@
 			//var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
 			
 			var material = new THREE.ShaderMaterial({
-				uniforms: {								
+				uniforms: {	
+					baseColor: new THREE.Uniform(new THREE.Vector3(0.5, 0.3, 0.1)),
 					specularIntensity: {value: 0.9},
 					diffuseIntensity: {value: 0.2},
 					rootShift: {value: 0.2},
@@ -284,6 +286,7 @@
 			var windMagnitude = 12;
 			var gravityMagnitude = -9.81;
 			var strandLength = 15.0;
+			var windDirection = new THREE.Vector3(1.0, 0.3, 0.2);
 			
 			function updatePositions(){
 				positions = line.geometry.attributes.position.array;
@@ -292,11 +295,8 @@
 				var strandStepLength = strandLength / detailLevel;
 				var windMag = (Math.sin(time * (1 / windCycle) * 2.0 * Math.PI) + 1) * 0.5; 
 				var gravityForce = new THREE.Vector3(0.0, gravityMagnitude, 0.0);
-				var windForce = new THREE.Vector3(1.0, 0.3, 0.2).multiplyScalar(windMag * windMag * windMagnitude);
-				var detailMinusOne = detailLevel - 1;
-				
-				console.log(gravityForce.y);
-				
+				var windForce = new THREE.Vector3(windDirection.x, windDirection.y, windDirection.z).multiplyScalar(windMag * windMag * windMagnitude);
+				var detailMinusOne = detailLevel - 1;			
 
 				//Iterate across all the vertices in the strand
 				for(var j = 0; j < hairStrandCount; j++){
@@ -387,18 +387,23 @@
 					}
 				}
 				
-				//line.geometry.attributes.position.array = positions;
 				line.geometry.attributes.position.needsUpdate = true;
 				line.geometry.attributes.normal.needsUpdate = true;
 			}
 			
 			param = {
+				"Red Value": line.material.uniforms.baseColor.value.x,
+				"Green Value": line.material.uniforms.baseColor.value.y,
+				"Blue Value": line.material.uniforms.baseColor.value.z,
 				"Particle Strands": hairStrandCount,
 				"Particle Details": detailLevel,
 				"Strand Length": strandLength,
 				"Damping": damping,
-				"Damping Range": dampingRange,
+				"Damping Noise": dampingRange,
 				"Damping Step": dampingStep,
+				"Wind Direction X": windDirection.x,
+				"Wind Direction Y": windDirection.y,
+				"Wind Direction Z": windDirection.z,
 				"Wind Cycle Speed": windCycle,
 				"Wind Magnitude": windMagnitude,
 				"Gravity Magnitude": gravityMagnitude,			
@@ -414,6 +419,20 @@
 			
 			var gui = new dat.GUI({width: 300});
 			gui.open();
+			
+			var colorsFolder = gui.addFolder("Color Values");
+			
+			colorsFolder.add(param, "Red Value", 0.0, 1.0).step(0.01).onChange(function(val){
+				line.material.uniforms.baseColor.value.x = val;
+			});
+			
+			colorsFolder.add(param, "Green Value", 0.0, 1.0).step(0.01).onChange(function(val){
+				line.material.uniforms.baseColor.value.y = val;
+			});
+			
+			colorsFolder.add(param, "Blue Value", 0.0, 1.0).step(0.01).onChange(function(val){
+				line.material.uniforms.baseColor.value.z = val;
+			});
 			
 			var strandFolder = gui.addFolder("Strand Properties");
 			
@@ -437,7 +456,7 @@
 				damping = val;
 			});
 			
-			strandFolder.add(param, "Damping Range", 0.0, 1.0).step(0.05).onChange(function(val){
+			strandFolder.add(param, "Damping Noise", 0.0, 1.0).step(0.05).onChange(function(val){
 				dampingRange = val;
 			});
 			
@@ -445,19 +464,33 @@
 				dampingStep = val;
 			});
 			
-			strandFolder.add(param, "Wind Cycle Speed", 0.0, 30.0).step(0.01).onChange(function(val){
+			var forcesFolder = gui.addFolder("Force Properties");
+			
+			forcesFolder.add(param, "Wind Direction X", -1.0, 1.0).step(0.01).onChange(function(val){
+				windDirection.x = val;
+			});
+			
+			forcesFolder.add(param, "Wind Direction Y", -1.0, 1.0).step(0.01).onChange(function(val){
+				windDirection.y = val;
+			});
+			
+			forcesFolder.add(param, "Wind Direction Z", -1.0, 1.0).step(0.01).onChange(function(val){
+				windDirection.z = val;
+			});
+			
+			forcesFolder.add(param, "Wind Cycle Speed", 0.0, 30.0).step(0.01).onChange(function(val){
 				windCycle = val;
 			});
 			
-			strandFolder.add(param, "Wind Magnitude", 0.0, 30.0).step(0.05).onChange(function(val){
+			forcesFolder.add(param, "Wind Magnitude", 0.0, 30.0).step(0.05).onChange(function(val){
 				windMagnitude = val;
 			});
 			
-			strandFolder.add(param, "Gravity Magnitude", -25.0, 25.0).step(0.01).onChange(function(val){
+			forcesFolder.add(param, "Gravity Magnitude", -25.0, 25.0).step(0.01).onChange(function(val){
 				gravityMagnitude = val;
 			});
 			
-			strandFolder.open();
+			//strandFolder.open();
 			
 			var materialFolder = gui.addFolder("Material Properties");
 
@@ -501,7 +534,7 @@
 				line.material.uniforms.spec2.value = val;
 			});
 			
-			materialFolder.open();
+			//materialFolder.open();
 			
 			function animate() {
 				time = performance.now() * 0.001;
