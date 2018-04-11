@@ -46,17 +46,18 @@
 			varying vec3 viewDir;
 			varying float strandStep;
 			
-			/*uniform float lightIntensity;
+			//uniform float lightIntensity;
 		
-			struct PointLight{
+			/*struct PointLight{
 				vec3 color;
 				vec3 position;
 				float distance;
-			};
+			};*/
 			
-			uniform PointLight pointLights[NUM_POINT_LIGHTS];*/
+			//uniform PointLight pointLights[NUM_POINT_LIGHTS];
 			
 			uniform vec3 baseColor;
+			uniform vec3 ambientLight;
 			uniform float specularIntensity;
 			uniform float diffuseIntensity;
 			uniform float rootShift;
@@ -67,7 +68,6 @@
 			uniform float spec2;
 		
 			void main(){
-				//vec3 baseColor = vec3(0.5, 0.3, 0.1);
 				vec3 tangent = vecNormal;
 				
 				//http://developer.amd.com/wordpress/media/2012/10/Scheuermann_HairRendering.pdf
@@ -89,7 +89,7 @@
 				float sinTRL_tip = sqrt(1.0 - cosTRL_tip * cosTRL_tip);
 				float specular_tip = max(0.0, cosTRL_tip * cosTE + sinTRL_tip * sinTE);
 				
-				vec3 finalColor = baseColor + (diffuseIntensity * diffuse * baseColor + specularIntensity * (spec1 * pow(specular_root, ex1) + spec2 * pow(specular_tip, ex2)));
+				vec3 finalColor = ambientLight * baseColor + (diffuseIntensity * diffuse * baseColor + specularIntensity * (spec1 * pow(specular_root, ex1) + spec2 * pow(specular_tip, ex2)));
 			
 				gl_FragColor = vec4(finalColor, 1.0);
 			}
@@ -166,6 +166,7 @@
 			var material = new THREE.ShaderMaterial({
 				uniforms: {	
 					baseColor: new THREE.Uniform(new THREE.Vector3(0.5, 0.3, 0.1)),
+					ambientLight: new THREE.Uniform(new THREE.Vector3(0.3, 0.3, 0.3)),
 					specularIntensity: {value: 0.9},
 					diffuseIntensity: {value: 0.2},
 					rootShift: {value: 0.2},
@@ -271,10 +272,6 @@
 			}
 			
 			initializeParticles();
-			
-			
-			
-
 
 			var delta = 0.0;
 			
@@ -395,6 +392,9 @@
 				"Red Value": line.material.uniforms.baseColor.value.x,
 				"Green Value": line.material.uniforms.baseColor.value.y,
 				"Blue Value": line.material.uniforms.baseColor.value.z,
+				"Ambient Red": line.material.uniforms.ambientLight.value.x,
+				"Ambient Green": line.material.uniforms.ambientLight.value.y,
+				"Ambient Blue": line.material.uniforms.ambientLight.value.z,
 				"Particle Strands": hairStrandCount,
 				"Particle Details": detailLevel,
 				"Strand Length": strandLength,
@@ -432,6 +432,20 @@
 			
 			colorsFolder.add(param, "Blue Value", 0.0, 1.0).step(0.01).onChange(function(val){
 				line.material.uniforms.baseColor.value.z = val;
+			});
+			
+			var lightingFolder = gui.addFolder("Lighting Properries");
+			
+			lightingFolder.add(param, "Ambient Red", 0.0, 1.0).step(0.01).onChange(function(val){
+				line.material.uniforms.ambientLight.value.x = val;
+			});
+			
+			lightingFolder.add(param, "Ambient Green", 0.0, 1.0).step(0.01).onChange(function(val){
+				line.material.uniforms.ambientLight.value.y = val;
+			});
+			
+			lightingFolder.add(param, "Ambient Blue", 0.0, 1.0).step(0.01).onChange(function(val){
+				line.material.uniforms.ambientLight.value.z = val;
 			});
 			
 			var strandFolder = gui.addFolder("Strand Properties");
@@ -478,7 +492,7 @@
 				windDirection.z = val;
 			});
 			
-			forcesFolder.add(param, "Wind Cycle Speed", 0.0, 30.0).step(0.01).onChange(function(val){
+			forcesFolder.add(param, "Wind Cycle Speed", 0.1, 30.0).step(0.01).onChange(function(val){
 				windCycle = val;
 			});
 			
