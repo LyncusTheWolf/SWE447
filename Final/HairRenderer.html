@@ -502,9 +502,7 @@
 			
 			forcesFolder.add(param, "Gravity Magnitude", -25.0, 25.0).step(0.01).onChange(function(val){
 				gravityMagnitude = val;
-			});
-			
-			//strandFolder.open();
+			});			
 			
 			var materialFolder = gui.addFolder("Material Properties");
 
@@ -547,8 +545,13 @@
 			materialFolder.add(param, "Spec 2", 0.0, 1.0).step(0.05).onChange(function(val){
 				line.material.uniforms.spec2.value = val;
 			});
-			
-			//materialFolder.open();
+				
+			//Open the folders by default
+			colorsFolder.open();
+			lightingFolder.open();
+			strandFolder.open();
+			forcesFolder.open();
+			materialFolder.open();
 			
 			function animate() {
 				time = performance.now() * 0.001;
