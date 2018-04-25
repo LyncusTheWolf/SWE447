@@ -73,11 +73,16 @@ for (int j = 0; j < image_Height; ++j) {
 			// calcule the pixels[i][j] color here.
 
 			//.....
-			//Get the distance from the point to the light and use it for attenuation calculations 
+			vec3 baseColor = tex2D(mainText, uvs);
+			//Get the distance from the point to the light and use it for attenuation calculations
 			//	(Assuming pointlight otherwise atten = 1)
-			//Calculate diffuse lighting based upon the angle of the normal with respect to the light
+			vec3 delta = lightPosition - pHit;
+			//Calculate diffuse lighting based upon the angle of the normal with respect to the eye
+			vec3 diffuse = dot(normal, viewDir);
 			//Calculate specular lighting based upon the initial raycast with respect to the
 			//	calculated vector of the light reflected across the normal
+			vec3 specular = dot(reflect(lightDir, normal), viewDir);
+			pixels[i][j] = ambient + diffuse + specular;
 		}
 	}
 
