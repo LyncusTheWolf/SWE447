@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="webgl-utils.js"></script>
+		<script src="initShaders.js"></script>
+		<script src="MV.js"></script>
+		<script src="rCube.js"></script>
+		<script src="cube.js"></script>
+  
+		<script id="Cube-vertex-shader" type="x-shader/x-vertex">
+		attribute vec4 vPosition;
+		uniform mat4 MV;
+		uniform mat4  P;
+
+		attribute vec2 aTextureCoord;
+		varying vec2 vTextureCoord;
+
+		void main()
+		{
+			gl_Position = P * MV * vPosition;
+			vTextureCoord = aTextureCoord;
+			
+		}
+		</script>
+		<script id = "Cube-fragment-shader" type="x-shader/x-fragment">
+		precision highp float;
+		varying vec2 vTextureCoord;
+		uniform sampler2D uSampler;
+		uniform vec2 uTextureSize;
+		uniform float ukernel[9];
+		uniform float ukernelWeight;
+
+
+		void main()
+		{
+			//*** without image processing ***
+			//gl_FragColor = texture2D(uSampler, vTextureCoord);
+			
+			//now let's manipulate that image by swapping red and blue?
+			//gl_FragColor = texture2D(uSampler, vTextureCoord).bgra;
+			
+			//***  RGB ➛ Grayscale (luminance) ***
+			/*const vec3 RGBtoY = vec3(0.2126, 0.7152, 0.0722);
+			gl_FragColor = vec4(vec3(dot(RGBtoY, texture2D(uSampler, vTextureCoord).rgb)), 1.0);*/
+			
+			//*******************
+			/*const int NumPixels = 100; //very slow if we take the real number of pixels (uTextureSize.x * uTextureSize.y) 
+			vec2 p = gl_FragCoord.xy;
+			vec3 minValue = vec3(1, 1, 1);
+			for(int i=0; i< NumPixels; i++) {
+				vec3 c = vec3(texture2D(uSampler, vTextureCoord).xy, p);
+				minValue = min(minValue, c);
+				++p.x;
+			}
+			gl_FragColor = vec4(minValue, 1.0);*/
+			
+			
+			// now compute 1 pixel in texture coordinates.
+			vec2 onePixel = vec2(1.0, 1.0) / uTextureSize;
+			// average the left, middle, and right pixels.
+			/*gl_FragColor = (texture2D(uSampler, vTextureCoord) +
+			texture2D(uSampler, vTextureCoord + vec2(onePixel.x, 0.0)) +
+			texture2D(uSampler, vTextureCoord + vec2(-onePixel.x, 0.0))) / 3.0;*/
+			
+			
+			// using a convolution kernel. 3x3 matrix where each entry in the matrix 
+			// represents how much to multiply the 8 pixels around the pixel we are rendering.
+			vec4 colorSum =
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2(-1, -1)) * ukernel[0] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2( 0, -1)) * ukernel[1] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2( 1, -1)) * ukernel[2] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2(-1,  0)) * ukernel[3] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2( 0,  0)) * ukernel[4] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2( 1,  0)) * ukernel[5] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2(-1,  1)) * ukernel[6] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2( 0,  1)) * ukernel[7] +
+			 texture2D(uSampler, vTextureCoord + onePixel * vec2( 1,  1)) * ukernel[8] ;
+		 
+		   // Divide the sum by the weight but just use rgb
+		   // we'll set alpha to 1.0
+		   gl_FragColor = vec4((colorSum / ukernelWeight).rgb, 1.0);
+		}
+		</script>
+	</head>
+	<body>
+		<canvas id="webgl-canvas" width="512" height="512" style="background-color: #0000FF"></canvas>
+		<p>Kernel Processing</p>
+		<form name="myForm">
+			<input type="radio" name="myRadios" onclick="handleClick(this);"  value="normal" checked />Normal<br>
+			<input type="radio" name="myRadios" onclick="handleClick(this);"  value="edge" />Edge<br>
+			<input type="radio" name="myRadios" onclick="handleClick(this);"  value="box" />Box Blur<br>
+			<input type="radio" name="myRadios" onclick="handleClick(this);"  value="gaussian" />Gaussian Blur<br>
+			<input type="radio" name="myRadios" onclick="handleClick(this);"  value="sharpen" />Sharpen
+		</form>
+	</body>
+</html>
